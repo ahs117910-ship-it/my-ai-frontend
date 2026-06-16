@@ -551,6 +551,7 @@ header p {
     display: flex;
     height: 100%;
     width: 100%;
+    min-height: 0;
 }
 
 .tutor-sidebar {
@@ -607,6 +608,7 @@ header p {
     display: flex;
     flex-direction: column;
     background: var(--bg-color);
+    min-height: 0;
 }
 
 .tutor-header-bar {
@@ -628,6 +630,7 @@ header p {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    min-height: 0;
 }
 
 .tutor-input-area {
