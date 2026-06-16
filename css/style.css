@@ -650,3 +650,118 @@ header p {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* --- Responsive Design (Mobile Friendly) --- */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    
+    .app-container {
+        flex-direction: column;
+    }
+    
+    /* Mobile Navigation Bar (Top) */
+    .sidebar {
+        width: 100%;
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        gap: 1rem;
+    }
+    
+    .logo {
+        margin-bottom: 0;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    nav {
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        justify-content: flex-start;
+    }
+    
+    nav::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .nav-item {
+        padding: 8px 12px;
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+    
+    /* Main Area Adjustments */
+    .main-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
+    
+    /* Form Inputs */
+    .goal-input-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .details-list .detail-item {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 8px;
+    }
+    
+    /* AI Tutor Mobile Layout */
+    .tutor-layout {
+        flex-direction: column;
+    }
+    
+    .tutor-sidebar {
+        width: 100%;
+        height: 150px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .tutor-history-list {
+        padding: 0.5rem;
+        gap: 0.2rem;
+    }
+    
+    .tutor-chat-box {
+        padding: 1rem;
+    }
+    
+    .tutor-input-area {
+        padding: 1rem;
+    }
+    
+    /* Timer Adjustments */
+    .timer-display {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .time-text {
+        font-size: 3rem;
+    }
+    
+    .timer-modes {
+        flex-wrap: wrap;
+    }
+    
+    /* Stats Layout */
+    .stats-container {
+        flex-direction: column;
+    }
+}
