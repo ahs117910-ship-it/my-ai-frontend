@@ -225,13 +225,67 @@ function renderHistorySidebar() {
     
     // Sort by newest first
     history.sort((a, b) => b.id - a.id).forEach(chat => {
+        const itemContainer = document.createElement('div');
+        itemContainer.style.display = 'flex';
+        itemContainer.style.alignItems = 'center';
+        itemContainer.style.justifyContent = 'space-between';
+        itemContainer.style.gap = '5px';
+        itemContainer.style.marginBottom = '5px';
+        
         const item = document.createElement('div');
         item.className = 'history-item';
+        item.style.flex = '1';
+        item.style.overflow = 'hidden';
+        item.style.textOverflow = 'ellipsis';
+        item.style.whiteSpace = 'nowrap';
+        item.style.marginBottom = '0';
         if (currentChatId === chat.id) item.classList.add('active');
         item.textContent = chat.title;
         item.title = chat.title;
         item.onclick = () => loadChat(chat.id);
-        historyList.appendChild(item);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '🗑️';
+        deleteBtn.style.background = 'transparent';
+        deleteBtn.style.border = 'none';
+        deleteBtn.style.cursor = 'pointer';
+        deleteBtn.style.padding = '0 5px';
+        deleteBtn.style.fontSize = '1rem';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteChat(chat.id);
+        };
+        
+        itemContainer.appendChild(item);
+        itemContainer.appendChild(deleteBtn);
+        historyList.appendChild(itemContainer);
+    });
+}
+
+function deleteChat(chatId) {
+    if(!confirm('이 대화 내역을 삭제하시겠습니까?')) return;
+    let history = getTutorHistory();
+    history = history.filter(c => c.id !== chatId);
+    saveTutorHistory(history);
+    
+    if(currentChatId === chatId) {
+        currentChatId = null;
+        const chatBox = document.getElementById('tutor-chat-box');
+        chatBox.innerHTML = '';
+        document.getElementById('btn-new-chat').click();
+    }
+    renderHistorySidebar();
+}
+
+const btnClearChats = document.getElementById('btn-clear-chats');
+if(btnClearChats) {
+    btnClearChats.addEventListener('click', () => {
+        if(confirm('모든 대화 내역을 삭제하시겠습니까?')) {
+            localStorage.removeItem('ai_tutor_history');
+            currentChatId = null;
+            renderHistorySidebar();
+            document.getElementById('btn-new-chat').click();
+        }
     });
 }
 
