@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Planner & Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <h2>AuraPlanner</h2>
+            </div>
+            <nav>
+                <a href="#" class="nav-item active" data-target="dashboard-view">
+                    <span class="icon">📊</span> <span data-i18n="nav-dashboard">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-target="goals-view">
+                    <span class="icon">🎯</span> <span data-i18n="nav-goals">Set Goals</span>
+                </a>
+                <a href="#" class="nav-item" data-target="timer-view">
+                    <span class="icon">⏱️</span> <span data-i18n="nav-timer">Pomodoro</span>
+                </a>
+                <a href="#" class="nav-item" data-target="review-view">
+                    <span class="icon">📝</span> <span data-i18n="nav-review">Daily Review</span>
+                </a>
+                <a href="#" class="nav-item" data-target="tutor-view">
+                    <span class="icon">🤖</span> <span data-i18n="nav-tutor">AI Tutor</span>
+                </a>
+            </nav>
+            <div style="margin-top: auto;">
+                <select id="lang-select" class="input-field" style="background-color: rgba(0,0,0,0.2);">
+                    <option value="en">English</option>
+                    <option value="ko">한국어</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header>
+                <h1 data-i18n="header-title">Welcome back! 👋</h1>
+                <p data-i18n="header-subtitle">Let's make today productive.</p>
+            </header>
+
+            <!-- Goals Setting View -->
+            <section id="goals-view" class="view hidden">
+                <div class="card">
+                    <h2 data-i18n="goals-title">Set Your Weekly Goals</h2>
+                    <form id="goal-form">
+                        <div id="goals-list">
+                            <div class="subject-group" style="background: rgba(15,23,42,0.3); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; position: relative;">
+                                <button type="button" class="btn-delete-subject" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;" title="Delete Subject">×</button>
+                                <input type="text" data-i18n="subject-placeholder" placeholder="Subject (e.g. C++)" class="input-field subject-input" required style="margin-bottom: 0.5rem; font-weight: 600; background: rgba(0,0,0,0.2); width: calc(100% - 30px);">
+                                <div class="details-list">
+                                    <div class="detail-item" style="display: flex; gap: 8px; margin-bottom: 0.5rem; align-items: center;">
+                                        <input type="text" data-i18n="details-placeholder" placeholder="Details (e.g. Master Pointers)" class="input-field desc-input" required style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <input type="number" placeholder="h" class="input-field hours-input" min="0" max="168" value="2" required style="width: 60px; padding-right: 5px;">
+                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">h</span>
+                                            <input type="number" placeholder="m" class="input-field mins-input" min="0" max="59" value="0" required style="width: 60px; padding-right: 5px;">
+                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">m</span>
+                                        </div>
+                                        <button type="button" class="btn-delete-detail" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; padding: 0 5px;" title="Delete Goal">×</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-text add-detail-btn" data-i18n="add-detail-btn" style="padding: 5px 10px; font-size: 0.85rem;">+ Add Another Goal to this Subject</button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-goal-btn" class="btn btn-secondary" data-i18n="add-goal-btn" style="width: 100%; margin-bottom: 2rem;">+ Add New Subject</button>
+                        
+                        <button type="submit" class="btn btn-primary generate-btn" data-i18n="generate-btn">
+                            ✨ Generate AI Schedule
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view">
+                <div class="dashboard-grid">
+                    <div class="card timeline-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h2 data-i18n="dash-title">Your Weekly AI Schedule</h2>
+                            <button id="reset-schedule-btn" class="btn btn-danger" data-i18n="btn-reset-schedule" style="padding: 5px 10px; font-size: 0.85rem;">Reset All</button>
+                        </div>
+                        <div class="timeline-controls">
+                            <!-- Days of week will be injected here -->
+                            <div class="days-tabs" id="days-tabs"></div>
+                        </div>
+                        <div id="schedule-timeline" class="timeline">
+                            <!-- Schedule items injected here -->
+                            <div class="empty-state" data-i18n="dash-empty">No schedule yet. Set your goals first!</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Timer View -->
+            <section id="timer-view" class="view hidden">
+                <div class="card timer-card">
+                    <h2 data-i18n="timer-title">Pomodoro Timer</h2>
+                    <div class="timer-display">
+                        <svg class="timer-ring" width="200" height="200">
+                            <circle class="timer-ring-circle" stroke-width="8" stroke="currentColor" fill="transparent" r="90" cx="100" cy="100"/>
+                            <circle class="timer-ring-progress" stroke-width="8" stroke="currentColor" fill="transparent" r="90" cx="100" cy="100"/>
+                        </svg>
+                        <div class="time-text" id="time-display">25:00</div>
+                    </div>
+                    <div class="timer-controls">
+                        <button id="start-timer" class="btn btn-primary" data-i18n="btn-start">Start</button>
+                        <button id="pause-timer" class="btn btn-secondary hidden" data-i18n="btn-pause">Pause</button>
+                        <button id="reset-timer" class="btn btn-text" data-i18n="btn-reset">Reset</button>
+                    </div>
+                    <div class="timer-modes">
+                        <button class="mode-btn active" data-time="25" data-i18n="mode-pomodoro">Pomodoro</button>
+                        <button class="mode-btn" data-time="5" data-i18n="mode-break">Short Break</button>
+                    </div>
+
+                    <!-- Progress tracking appearing after Pomodoro finishes -->
+                    <div id="progress-tracking" class="progress-tracking hidden">
+                        <h3 data-i18n="session-complete">Session Complete! How did it go?</h3>
+                        <div class="progress-actions">
+                            <button class="btn btn-success" data-status="completed" data-i18n="btn-fully">Fully Achieved</button>
+                            <button class="btn btn-warning" data-status="partial" data-i18n="btn-partial">Partially Achieved</button>
+                            <button class="btn btn-danger" data-status="missed" data-i18n="btn-not">Not Achieved</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Review View -->
+            <section id="review-view" class="view hidden">
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h2 data-i18n="review-stats-title">Overall Progress Stats</h2>
+                        <div class="stats-container">
+                            <div class="stat-box">
+                                <span class="stat-label" data-i18n="stat-label-total">Total Sessions</span>
+                                <span class="stat-value" id="stat-total">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label" data-i18n="stat-label-completed">Completed</span>
+                                <span class="stat-value" id="stat-completed" style="color: var(--success-color);">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label" data-i18n="stat-label-rate">Completion Rate</span>
+                                <span class="stat-value" id="stat-rate">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-top: 2rem;">
+                        <h2 data-i18n="review-form-title">Submit Daily Review</h2>
+                        <form id="review-form">
+                            <div class="goal-input-group" style="flex-direction: column;">
+                                <label for="review-date" data-i18n="review-date-label">Date:</label>
+                                <input type="date" id="review-date" class="input-field" required>
+                                
+                                <label data-i18n="review-checklist-label" style="margin-top: 1rem;">Today's Tasks (Check what you completed):</label>
+                                <div id="review-task-list" class="checklist-container" style="background: rgba(15,23,42,0.5); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem; max-height: 200px; overflow-y: auto;">
+                                    <div class="empty-state" data-i18n="review-no-tasks">No tasks found for today.</div>
+                                </div>
+                                
+                                <div class="calculated-rate" style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">
+                                    <span data-i18n="review-calculated-rate">Calculated Achievement Rate:</span>
+                                    <strong id="auto-achievement-rate" style="color: var(--primary-color);">0%</strong>
+                                </div>
+                                
+                                <label for="review-notes" data-i18n="review-notes-label">Reflections / Notes:</label>
+                                <textarea id="review-notes" data-i18n="review-notes-placeholder" class="input-field" rows="4" placeholder="How did today go? What could be improved?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" data-i18n="btn-submit-review">Submit Review</button>
+                        </form>
+                    </div>
+
+                    <div id="ai-coaching-container" class="card hidden" style="margin-top: 2rem; border-left: 4px solid var(--accent-color);">
+                        <h2 data-i18n="coaching-title">✨ AI Study Coach Feedback</h2>
+                        <div id="coaching-content" style="line-height: 1.6; color: var(--text-primary); font-size: 0.95rem;">
+                            <!-- AI feedback injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Tutor View -->
+            <section id="tutor-view" class="view hidden">
+                <div class="card" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
+                    <h2 data-i18n="tutor-title">🤖 AI Study Tutor</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Ask me any questions while you study!</p>
+                    
+                    <div id="tutor-chat-box" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem;">
+                        <div class="chat-message ai-message" style="align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%;">
+                            안녕하세요! 공부하다가 모르는 내용이 생기면 언제든 편하게 물어보세요. 😊
+                        </div>
+                    </div>
+                    
+                    <form id="tutor-form" style="display: flex; gap: 8px;">
+                        <input type="text" id="tutor-input" class="input-field" placeholder="Ask a question..." required style="flex: 1;">
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals and Overlays -->
+    <div id="loading-overlay" class="overlay hidden">
+        <div class="spinner"></div>
+        <p>AI is crafting your perfect schedule...</p>
+    </div>
+
+    <script src="js/i18n.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
