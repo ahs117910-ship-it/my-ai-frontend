@@ -546,6 +546,96 @@ header p {
     box-shadow: var(--shadow-sm);
 }
 
+/* --- AI Tutor Chat Layout --- */
+.tutor-layout {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.tutor-sidebar {
+    width: 260px;
+    background-color: var(--secondary-color);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.tutor-sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tutor-history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-item {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: var(--transition);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid transparent;
+}
+
+.history-item:hover {
+    background: #ffffff;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.history-item.active {
+    background: #ffffff;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.tutor-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-color);
+}
+
+.tutor-header-bar {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background: #ffffff;
+}
+
+.tutor-header-bar h2 {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+}
+
+.tutor-chat-box {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tutor-input-area {
+    padding: 1.5rem 2rem;
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
+}
+
 /* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

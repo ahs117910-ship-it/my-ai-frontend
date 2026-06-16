@@ -201,16 +201,116 @@ document.getElementById('reset-schedule-btn').addEventListener('click', () => {
     }
 });
 
-// --- AI Tutor Chat ---
+// --- AI Tutor Chat Memory & History ---
+let currentChatId = null;
+
+function getTutorHistory() {
+    const data = localStorage.getItem('ai_tutor_history');
+    return data ? JSON.parse(data) : [];
+}
+
+function saveTutorHistory(history) {
+    localStorage.setItem('ai_tutor_history', JSON.stringify(history));
+}
+
+function renderHistorySidebar() {
+    const historyList = document.getElementById('tutor-history-list');
+    historyList.innerHTML = '';
+    
+    const history = getTutorHistory();
+    if (history.length === 0) {
+        historyList.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.85rem; padding: 10px; text-align: center;">대화 기록이 없습니다.</div>';
+        return;
+    }
+    
+    // Sort by newest first
+    history.sort((a, b) => b.id - a.id).forEach(chat => {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        if (currentChatId === chat.id) item.classList.add('active');
+        item.textContent = chat.title;
+        item.title = chat.title;
+        item.onclick = () => loadChat(chat.id);
+        historyList.appendChild(item);
+    });
+}
+
+function loadChat(chatId) {
+    currentChatId = chatId;
+    renderHistorySidebar();
+    
+    const history = getTutorHistory();
+    const chat = history.find(c => c.id === chatId);
+    const chatBox = document.getElementById('tutor-chat-box');
+    chatBox.innerHTML = '';
+    
+    if (chat && chat.messages) {
+        chat.messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${msg.role === 'user' ? 'user-message' : 'ai-message'}`;
+            if (msg.role === 'user') {
+                msgDiv.style.cssText = 'align-self: flex-end; background: var(--primary-color); padding: 1rem; border-radius: 12px; max-width: 80%; color: white;';
+                msgDiv.textContent = msg.content;
+            } else {
+                msgDiv.style.cssText = 'align-self: flex-start; background: #ffffff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; max-width: 80%;';
+                msgDiv.innerHTML = msg.content; // Allow HTML from AI
+            }
+            chatBox.appendChild(msgDiv);
+        });
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+document.getElementById('btn-new-chat').addEventListener('click', () => {
+    currentChatId = null;
+    renderHistorySidebar();
+    
+    const chatBox = document.getElementById('tutor-chat-box');
+    chatBox.innerHTML = `
+        <div class="chat-message ai-message" style="align-self: flex-start; background: #ffffff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; max-width: 80%;">
+            안녕하세요! 공부하다가 모르는 내용이 생기면 언제든 편하게 물어보세요. 😊 새로운 대화를 시작합니다!
+        </div>
+    `;
+});
+
+// Initialize History
+renderHistorySidebar();
+if (!currentChatId) {
+    document.getElementById('btn-new-chat').click();
+}
+
+// --- Submit Question ---
 document.getElementById('tutor-form').addEventListener('submit', async e => {
     e.preventDefault();
     const inputField = document.getElementById('tutor-input');
     const question = inputField.value.trim();
     if(!question) return;
 
+    // Determine current chat context
+    if (!currentChatId) {
+        currentChatId = Date.now();
+    }
+    
+    const history = getTutorHistory();
+    let chat = history.find(c => c.id === currentChatId);
+    if (!chat) {
+        // Create new chat
+        chat = {
+            id: currentChatId,
+            title: question.length > 20 ? question.substring(0, 20) + '...' : question,
+            messages: []
+        };
+        history.push(chat);
+    }
+    
+    // Save user message
+    chat.messages.push({ role: 'user', content: question });
+    saveTutorHistory(history);
+    renderHistorySidebar();
+
     const chatBox = document.getElementById('tutor-chat-box');
     
-    // Add user message
+    // Render user message to DOM
     const userMsg = document.createElement('div');
     userMsg.className = 'chat-message user-message';
     userMsg.style.cssText = 'align-self: flex-end; background: var(--primary-color); padding: 1rem; border-radius: 12px; max-width: 80%; color: white;';
@@ -224,7 +324,7 @@ document.getElementById('tutor-form').addEventListener('submit', async e => {
     const typingIndicator = document.createElement('div');
     typingIndicator.id = 'ai-typing-indicator';
     typingIndicator.className = 'chat-message ai-message';
-    typingIndicator.style.cssText = 'align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;';
+    typingIndicator.style.cssText = 'align-self: flex-start; background: #ffffff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; max-width: 80%; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;';
     typingIndicator.innerHTML = '<span style="font-size: 1.2rem; line-height: 1;">💬</span> AI 튜터가 답변을 작성하고 있습니다...';
     chatBox.appendChild(typingIndicator);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -244,12 +344,16 @@ document.getElementById('tutor-form').addEventListener('submit', async e => {
         const indicator = document.getElementById('ai-typing-indicator');
         if (indicator) indicator.remove();
         
-        // Add AI response
+        // Render AI response
         const aiMsg = document.createElement('div');
         aiMsg.className = 'chat-message ai-message';
-        aiMsg.style.cssText = 'align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%;';
+        aiMsg.style.cssText = 'align-self: flex-start; background: #ffffff; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; max-width: 80%;';
         aiMsg.innerHTML = data.answer;
         chatBox.appendChild(aiMsg);
+        
+        // Save AI message to history
+        chat.messages.push({ role: 'ai', content: data.answer });
+        saveTutorHistory(history);
         
     } catch(err) {
         console.error(err);
