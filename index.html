@@ -1,222 +1,361 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Study Planner & Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <title>AETHER - AI Antigravity Study Planner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Orbitron for Tech/Futuristic vibe -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        tech: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            950: '#040711',
+                            900: '#0a0f24',
+                            800: '#121a36',
+                            700: '#1e2952',
+                        },
+                        neon: {
+                            violet: '#a855f7',
+                            indigo: '#6366f1',
+                            emerald: '#10b981',
+                            rose: '#f43f5e',
+                            cyan: '#06b6d4'
+                        }
+                    },
+                    boxShadow: {
+                        'neon-violet': '0 0 15px rgba(168, 85, 247, 0.4)',
+                        'neon-indigo': '0 0 15px rgba(99, 102, 241, 0.4)',
+                        'neon-cyan': '0 0 15px rgba(6, 182, 212, 0.4)',
+                        'neon-emerald': '0 0 15px rgba(16, 185, 129, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040711;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e2952;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a855f7;
+        }
+        
+        /* Glassmorphism 2.0 with linear gradients border */
+        .glass-panel {
+            background: rgba(10, 15, 36, 0.65);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-interactive {
+            background: rgba(10, 15, 36, 0.65);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .glass-panel-interactive:hover {
+            transform: translateY(-4px);
+            border-color: rgba(168, 85, 247, 0.35);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1);
+        }
+        
+        /* Floating background blobs animation */
+        @keyframes orbit {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+
+        @keyframes orbit-delayed {
+            0% { transform: translate(0px, 0px) scale(1); }
+            50% { transform: translate(-40px, 40px) scale(1.15); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+
+        .blob-1 {
+            animation: orbit 15s infinite ease-in-out;
+        }
+
+        .blob-2 {
+            animation: orbit-delayed 18s infinite ease-in-out;
+        }
+        
+        /* Shimmer Loading Animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+            background: linear-gradient(90deg, #121a36 25%, #1e2952 50%, #121a36 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Tech-dot background layer */
+        .dot-matrix {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
 </head>
-<body>
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <div class="logo-icon"></div>
-                <h2>AuraPlanner</h2>
-            </div>
-            <nav>
-                <a href="#" class="nav-item active" data-target="dashboard-view">
-                    <span class="icon">📊</span> <span data-i18n="nav-dashboard">Dashboard</span>
-                </a>
-                <a href="#" class="nav-item" data-target="goals-view">
-                    <span class="icon">🎯</span> <span data-i18n="nav-goals">Set Goals</span>
-                </a>
-                <a href="#" class="nav-item" data-target="timer-view">
-                    <span class="icon">⏱️</span> <span data-i18n="nav-timer">Pomodoro</span>
-                </a>
-                <a href="#" class="nav-item" data-target="review-view">
-                    <span class="icon">📝</span> <span data-i18n="nav-review">Daily Review</span>
-                </a>
-                <a href="#" class="nav-item" data-target="tutor-view">
-                    <span class="icon">🤖</span> <span data-i18n="nav-tutor">AI Tutor</span>
-                </a>
-            </nav>
-            <div style="margin-top: auto;">
-                <select id="lang-select" class="input-field" style="background-color: rgba(0,0,0,0.2);">
-                    <option value="en">English</option>
-                    <option value="ko">한국어</option>
-                </select>
-            </div>
-        </aside>
+<body class="bg-dark-950 text-slate-100 font-sans min-h-screen selection:bg-neon-violet/30 selection:text-white overflow-x-hidden dot-matrix relative">
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <header>
-                <h1 data-i18n="header-title">Welcome back! 👋</h1>
-                <p data-i18n="header-subtitle">Let's make today productive.</p>
-            </header>
+    <!-- Floating Antigravity Aura Blobs -->
+    <div class="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-neon-violet/15 rounded-full blur-[140px] pointer-events-none blob-1"></div>
+    <div class="absolute bottom-[10%] right-[-10%] w-[700px] h-[700px] bg-neon-indigo/15 rounded-full blur-[160px] pointer-events-none blob-2"></div>
+    <div class="absolute top-[40%] left-[35%] w-[400px] h-[400px] bg-neon-cyan/10 rounded-full blur-[120px] pointer-events-none blob-1" style="animation-duration: 22s;"></div>
 
-            <!-- Goals Setting View -->
-            <section id="goals-view" class="view hidden">
-                <div class="card">
-                    <h2 data-i18n="goals-title">Set Your Weekly Goals</h2>
-                    <form id="goal-form">
-                        <div id="goals-list">
-                            <div class="subject-group" style="background: rgba(15,23,42,0.3); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; position: relative;">
-                                <button type="button" class="btn-delete-subject" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem;" title="Delete Subject">×</button>
-                                <input type="text" data-i18n="subject-placeholder" placeholder="Subject (e.g. C++)" class="input-field subject-input" required style="margin-bottom: 0.5rem; font-weight: 600; background: rgba(0,0,0,0.2); width: calc(100% - 30px);">
-                                <div class="details-list">
-                                    <div class="detail-item" style="display: flex; gap: 8px; margin-bottom: 0.5rem; align-items: center;">
-                                        <input type="text" data-i18n="details-placeholder" placeholder="Details (e.g. Master Pointers)" class="input-field desc-input" required style="flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 4px;">
-                                            <input type="number" placeholder="h" class="input-field hours-input" min="0" max="168" value="2" required style="width: 60px; padding-right: 5px;">
-                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">h</span>
-                                            <input type="number" placeholder="m" class="input-field mins-input" min="0" max="59" value="0" required style="width: 60px; padding-right: 5px;">
-                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">m</span>
-                                        </div>
-                                        <button type="button" class="btn-delete-detail" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; padding: 0 5px;" title="Delete Goal">×</button>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-text add-detail-btn" data-i18n="add-detail-btn" style="padding: 5px 10px; font-size: 0.85rem;">+ Add Another Goal to this Subject</button>
-                            </div>
+    <!-- Custom Floating Toast Notification -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center relative z-20 glass-panel">
+        <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-neon-violet to-neon-indigo flex items-center justify-center shadow-neon-violet transition-transform hover:scale-105 duration-300">
+                <i class="fa-solid fa-wand-magic-sparkles text-white text-xl animate-pulse"></i>
+            </div>
+            <div>
+                <span class="text-2xl font-black tracking-wider bg-gradient-to-r from-white via-slate-200 to-neon-indigo bg-clip-text text-transparent font-tech">AETHER</span>
+                <span class="text-[10px] block text-slate-400 font-bold tracking-widest uppercase">Antigravity Smart Agent Plan</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-extrabold tracking-tight text-slate-200">김공부님</p>
+                <span class="text-xs text-neon-emerald font-semibold flex items-center justify-end gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-neon-emerald animate-ping"></span>
+                    AI 엔진 온라인
+                </span>
+            </div>
+            <div class="w-11 h-11 rounded-2xl border-2 border-neon-violet/30 p-0.5 shadow-neon-violet/10 flex items-center justify-center overflow-hidden transition-transform hover:rotate-3">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Profile" class="w-full h-full object-cover rounded-xl">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="max-w-7xl mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-20">
+        
+        <!-- Left Column: Input Form & Progress (5/12) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- AI Scheduler Configuration Panel -->
+            <div class="glass-panel p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-neon-violet via-neon-indigo to-neon-cyan"></div>
+                
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center gap-3">
+                        <i class="fa-solid fa-sliders text-neon-violet text-lg"></i> 학습 목표 설정
+                    </h2>
+                    <span class="text-[10px] bg-neon-violet/10 text-neon-violet px-3 py-1.5 rounded-xl font-extrabold border border-neon-violet/20 tracking-wider font-tech">AGENT INPUT</span>
+                </div>
+
+                <!-- Input: Available Hours -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider" for="hours">
+                            이번 주 가용 시간 (시간)
+                        </label>
+                        <span id="hours-display" class="text-sm font-tech font-bold text-neon-cyan">24 시간</span>
+                    </div>
+                    <div class="relative flex items-center gap-4">
+                        <input type="range" id="hours" min="1" max="168" value="24" oninput="updateHoursDisplay(this.value)"
+                            class="w-full h-2 bg-dark-900 rounded-lg appearance-none cursor-pointer accent-neon-cyan focus:outline-none focus:ring-1 focus:ring-neon-cyan">
+                    </div>
+                </div>
+
+                <!-- Input Subject & Goals Form -->
+                <div class="border-t border-white/5 pt-6">
+                    <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-book-bookmark text-neon-indigo"></i> 과목 추가 및 세부 목표
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <input type="text" id="subject-name" placeholder="예: C++ 프로그래밍" 
+                                class="w-full bg-dark-900/60 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-neon-indigo focus:border-transparent transition-all text-sm font-semibold">
                         </div>
-                        <button type="button" id="add-goal-btn" class="btn btn-secondary" data-i18n="add-goal-btn" style="width: 100%; margin-bottom: 2rem;">+ Add New Subject</button>
                         
-                        <button type="submit" class="btn btn-primary generate-btn" data-i18n="generate-btn">
-                            ✨ Generate AI Schedule
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-2.5">세부 목표 (최대 3개)</label>
+                            <div class="space-y-2">
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-tech text-neon-indigo/50">01</span>
+                                    <input type="text" class="sub-goal w-full bg-dark-900/40 border border-white/5 rounded-xl py-2.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-neon-indigo focus:border-transparent focus:outline-none text-slate-200 font-medium" placeholder="목표 1 (필수)">
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-tech text-neon-indigo/50">02</span>
+                                    <input type="text" class="sub-goal w-full bg-dark-900/40 border border-white/5 rounded-xl py-2.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-neon-indigo focus:border-transparent focus:outline-none text-slate-200 font-medium" placeholder="목표 2 (선택)">
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-tech text-neon-indigo/50">03</span>
+                                    <input type="text" class="sub-goal w-full bg-dark-900/40 border border-white/5 rounded-xl py-2.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-neon-indigo focus:border-transparent focus:outline-none text-slate-200 font-medium" placeholder="목표 3 (선택)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="addSubject()" class="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 group text-slate-200">
+                            <i class="fa-solid fa-plus text-neon-indigo group-hover:rotate-90 transition-transform"></i> 과목 목표 리스트에 추가
                         </button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Dashboard View -->
-            <section id="dashboard-view" class="view">
-                <div class="dashboard-grid">
-                    <div class="card timeline-card">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h2 data-i18n="dash-title">Your Weekly AI Schedule</h2>
-                            <button id="reset-schedule-btn" class="btn btn-danger" data-i18n="btn-reset-schedule" style="padding: 5px 10px; font-size: 0.85rem;">Reset All</button>
-                        </div>
-                        <div class="timeline-controls">
-                            <!-- Days of week will be injected here -->
-                            <div class="days-tabs" id="days-tabs"></div>
-                        </div>
-                        <div id="schedule-timeline" class="timeline">
-                            <!-- Schedule items injected here -->
-                            <div class="empty-state" data-i18n="dash-empty">No schedule yet. Set your goals first!</div>
-                        </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Timer View -->
-            <section id="timer-view" class="view hidden">
-                <div class="card timer-card">
-                    <h2 data-i18n="timer-title">Pomodoro Timer</h2>
-                    <div class="timer-display">
-                        <svg class="timer-ring" width="200" height="200">
-                            <circle class="timer-ring-circle" stroke-width="8" stroke="currentColor" fill="transparent" r="90" cx="100" cy="100"/>
-                            <circle class="timer-ring-progress" stroke-width="8" stroke="currentColor" fill="transparent" r="90" cx="100" cy="100"/>
+                <!-- Added Subjects Display -->
+                <div class="mt-6 border-t border-white/5 pt-4">
+                    <p class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">현재 추가된 과목 및 목표</p>
+                    <div id="subject-list" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- Dynamic Content Inject -->
+                    </div>
+                </div>
+
+                <!-- Giant Magic AI Button -->
+                <button onclick="triggerGenerateSchedule()" class="w-full mt-6 py-4.5 bg-gradient-to-r from-neon-violet via-neon-indigo to-blue-600 hover:brightness-110 rounded-2xl font-bold tracking-wider text-white shadow-neon-violet transition-all duration-300 flex items-center justify-center gap-3 text-sm font-tech">
+                    <i class="fa-solid fa-circle-nodes animate-spin text-md hidden" id="spinner"></i>
+                    <i class="fa-solid fa-wand-magic-sparkles" id="magic-icon"></i>
+                    AI 맞춤 공부 시간표 생성
+                </button>
+            </div>
+
+            <!-- Intelligent Interactive Pomodoro & Today Tracker -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+                <!-- Pomodoro Panel -->
+                <div class="glass-panel p-6 rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden">
+                    <p class="text-[10px] font-tech font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-notch text-neon-rose animate-spin"></i> FOCUS TIMER
+                    </p>
+                    
+                    <div class="relative w-36 h-36 flex items-center justify-center mb-5">
+                        <!-- Neon Ring effect behind the SVG -->
+                        <div class="absolute w-32 h-32 rounded-full bg-neon-violet/5 shadow-neon-violet/20 blur-sm"></div>
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="72" cy="72" r="64" stroke="rgba(255, 255, 255, 0.03)" stroke-width="6" fill="transparent"/>
+                            <circle id="timer-progress" cx="72" cy="72" r="64" stroke="url(#gradient-violet)" stroke-width="7" fill="transparent"
+                                stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="0" class="transition-all duration-1000"/>
+                            <defs>
+                                <linearGradient id="gradient-violet" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#6366f1" />
+                                </linearGradient>
+                            </defs>
                         </svg>
-                        <div class="time-text" id="time-display">25:00</div>
-                    </div>
-                    <div class="timer-controls">
-                        <button id="start-timer" class="btn btn-primary" data-i18n="btn-start">Start</button>
-                        <button id="pause-timer" class="btn btn-secondary hidden" data-i18n="btn-pause">Pause</button>
-                        <button id="reset-timer" class="btn btn-text" data-i18n="btn-reset">Reset</button>
-                    </div>
-                    <div class="timer-modes">
-                        <button class="mode-btn active" data-time="25" data-i18n="mode-pomodoro">Pomodoro</button>
-                        <button class="mode-btn" data-time="5" data-i18n="mode-break">Short Break</button>
+                        <div class="absolute text-center">
+                            <span class="text-3xl font-tech font-black tracking-tight text-white" id="timer-display">25:00</span>
+                            <span class="text-[9px] block text-slate-400 mt-1 uppercase tracking-widest font-semibold">Focus Session</span>
+                        </div>
                     </div>
 
-                    <!-- Progress tracking appearing after Pomodoro finishes -->
-                    <div id="progress-tracking" class="progress-tracking hidden">
-                        <h3 data-i18n="session-complete">Session Complete! How did it go?</h3>
-                        <div class="progress-actions">
-                            <button class="btn btn-success" data-status="completed" data-i18n="btn-fully">Fully Achieved</button>
-                            <button class="btn btn-warning" data-status="partial" data-i18n="btn-partial">Partially Achieved</button>
-                            <button class="btn btn-danger" data-status="missed" data-i18n="btn-not">Not Achieved</button>
-                        </div>
+                    <div class="flex gap-3 relative z-10 w-full px-4">
+                        <button id="timer-btn" onclick="toggleTimer()" class="flex-1 py-2.5 bg-gradient-to-r from-neon-violet to-neon-indigo text-xs font-bold rounded-xl transition-all duration-300 shadow-neon-violet hover:brightness-110">시작</button>
+                        <button onclick="resetTimer()" class="px-5 py-2.5 bg-dark-900 border border-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all hover:bg-dark-800">리셋</button>
                     </div>
                 </div>
-            </section>
 
-            <!-- Daily Review View -->
-            <section id="review-view" class="view hidden">
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h2 data-i18n="review-stats-title">Overall Progress Stats</h2>
-                        <div class="stats-container">
-                            <div class="stat-box">
-                                <span class="stat-label" data-i18n="stat-label-total">Total Sessions</span>
-                                <span class="stat-value" id="stat-total">0</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label" data-i18n="stat-label-completed">Completed</span>
-                                <span class="stat-value" id="stat-completed" style="color: var(--success-color);">0</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label" data-i18n="stat-label-rate">Completion Rate</span>
-                                <span class="stat-value" id="stat-rate">0%</span>
-                            </div>
+                <!-- Mini Progress Wheel -->
+                <div class="glass-panel p-6 rounded-[2rem] flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-neon-emerald/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div>
+                        <p class="text-[10px] font-tech font-bold text-slate-400 tracking-wider mb-2.5 uppercase">Today's Progress</p>
+                        <h3 class="text-3xl font-tech font-black tracking-tight text-white flex items-baseline gap-2" id="stat-rate">
+                            0% 
+                        </h3>
+                    </div>
+                    <div class="w-full bg-dark-950 h-3 rounded-full overflow-hidden mt-6 border border-white/5 relative p-[1px]">
+                        <div id="stat-progress-bar" class="bg-gradient-to-r from-neon-violet via-neon-indigo to-neon-emerald h-full w-[0%] rounded-full relative shadow-neon-emerald/20 transition-all duration-1000">
+                            <!-- Shimmer overlay on active progress -->
+                            <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
                         </div>
                     </div>
-
-                    <div class="card" style="margin-top: 2rem;">
-                        <h2 data-i18n="review-form-title">Submit Daily Review</h2>
-                        <form id="review-form">
-                            <div class="goal-input-group" style="flex-direction: column;">
-                                <label for="review-date" data-i18n="review-date-label">Date:</label>
-                                <input type="date" id="review-date" class="input-field" required>
-                                
-                                <label data-i18n="review-checklist-label" style="margin-top: 1rem;">Today's Tasks (Check what you completed):</label>
-                                <div id="review-task-list" class="checklist-container" style="background: rgba(15,23,42,0.5); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem; max-height: 200px; overflow-y: auto;">
-                                    <div class="empty-state" data-i18n="review-no-tasks">No tasks found for today.</div>
-                                </div>
-                                
-                                <div class="calculated-rate" style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 600;">
-                                    <span data-i18n="review-calculated-rate">Calculated Achievement Rate:</span>
-                                    <strong id="auto-achievement-rate" style="color: var(--primary-color);">0%</strong>
-                                </div>
-                                
-                                <label for="review-notes" data-i18n="review-notes-label">Reflections / Notes:</label>
-                                <textarea id="review-notes" data-i18n="review-notes-placeholder" class="input-field" rows="4" placeholder="How did today go? What could be improved?" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;" data-i18n="btn-submit-review">Submit Review</button>
-                        </form>
-                    </div>
-
-                    <div id="ai-coaching-container" class="card hidden" style="margin-top: 2rem; border-left: 4px solid var(--accent-color);">
-                        <h2 data-i18n="coaching-title">✨ AI Study Coach Feedback</h2>
-                        <div id="coaching-content" style="line-height: 1.6; color: var(--text-primary); font-size: 0.95rem;">
-                            <!-- AI feedback injected here -->
-                        </div>
+                    <div class="bg-dark-900/60 p-3 rounded-xl border border-white/5 mt-5 flex gap-2.5 items-start">
+                        <i class="fa-solid fa-lightbulb text-neon-cyan mt-0.5 text-xs"></i>
+                        <p class="text-[10px] text-slate-400 leading-relaxed font-medium">진행 상황에 따라 백엔드 데이터와 동기화됩니다.</p>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- AI Tutor View -->
-            <section id="tutor-view" class="view hidden">
-                <div class="card" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
-                    <h2 data-i18n="tutor-title">🤖 AI Study Tutor</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">Ask me any questions while you study!</p>
+        </section>
+
+        <!-- Right Column: Interactive Schedule Board & Timeline (7/12) -->
+        <section class="lg:col-span-7">
+            <div class="glass-panel p-6 md:p-8 rounded-[2rem] min-h-[600px] flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-neon-cyan via-neon-indigo to-neon-violet"></div>
+                
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent font-tech">AI 최적화 주간 시간표</h2>
+                        <p class="text-xs text-slate-400 mt-1">Gemini 에이전트가 완벽하게 설계한 목표 맞춤형 타임라인</p>
+                    </div>
+                </div>
+
+                <!-- Timetable Area (Interactive) -->
+                <div id="timetable-content" class="flex-grow flex flex-col justify-center">
                     
-                    <div id="tutor-chat-box" style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1rem;">
-                        <div class="chat-message ai-message" style="align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%;">
-                            안녕하세요! 공부하다가 모르는 내용이 생기면 언제든 편하게 물어보세요. 😊
+                    <!-- Placeholder State (Before generating) -->
+                    <div id="placeholder-state" class="text-center py-20">
+                        <div class="w-24 h-24 bg-dark-900/60 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-inner group hover:border-neon-violet/40 transition-colors duration-300">
+                            <i class="fa-solid fa-calendar-week text-4xl text-slate-500 group-hover:text-neon-violet transition-colors"></i>
                         </div>
+                        <h3 class="text-lg font-bold mb-2 text-slate-200">목표와 시간을 입력하고 시간표를 생성해 보세요.</h3>
+                        <p class="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">AI 에이전트가 목표의 우선순위와 난이도를 계산하여 완벽하게 정돈된 일주일 학습 로드맵을 선사합니다.</p>
                     </div>
-                    
-                    <form id="tutor-form" style="display: flex; gap: 8px;">
-                        <input type="text" id="tutor-input" class="input-field" placeholder="Ask a question..." required style="flex: 1;">
-                        <button type="submit" class="btn btn-primary">Send</button>
-                    </form>
+
+                    <!-- AI Loader State (Visible during computation) -->
+                    <div id="loader-state" class="hidden text-center py-20">
+                        <div class="relative w-24 h-24 mx-auto mb-8">
+                            <div class="absolute inset-0 rounded-full border-[3px] border-neon-violet/20 border-t-neon-violet animate-spin" style="animation-duration: 1.2s;"></div>
+                            <div class="absolute inset-2 rounded-full border-[3px] border-neon-indigo/20 border-b-neon-indigo animate-spin" style="animation-duration: 2.5s;"></div>
+                            <div class="absolute inset-4 rounded-full border-[3px] border-neon-cyan/20 border-l-neon-cyan animate-spin" style="animation-duration: 4s;"></div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-200 mb-2 font-tech tracking-wider">AETHER ENGINE COMPUTING</h3>
+                        <p class="text-xs text-neon-indigo font-mono animate-pulse">Analyzing subject difficulty... Mapping tasks... Optimization initialized.</p>
+                    </div>
+
+                    <!-- Generated Calendar Content -->
+                    <div id="calendar-grid" class="hidden space-y-6">
+                        <!-- Dynamic timeline slots will be injected here -->
+                    </div>
+
                 </div>
-            </section>
+            </div>
 
-        </main>
-    </div>
+        </section>
 
-    <!-- Modals and Overlays -->
-    <div id="loading-overlay" class="overlay hidden">
-        <div class="spinner"></div>
-        <p>AI is crafting your perfect schedule...</p>
-    </div>
+    </main>
 
-    <script src="js/i18n.js"></script>
-    <script src="js/timer.js"></script>
+    <!-- Footer -->
+    <footer class="text-center py-8 text-[11px] text-slate-500 border-t border-white/5 mt-12 relative z-20 font-tech uppercase tracking-widest">
+        <p>© 2026 AETHER Planner Engine. Powered by Google Antigravity & Gemini. All rights reserved.</p>
+    </footer>
+
+    <!-- Link to the backend-connected JS -->
     <script src="js/app.js"></script>
 </body>
 </html>
