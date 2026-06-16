@@ -1,401 +1,269 @@
+// API Base URL
 const API_BASE_URL = 'https://ai-syudy-planner.onrender.com';
 
-// Custom UI Toast Notification Library
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    
-    let icon = 'fa-info-circle';
-    let borderStyle = 'border-neon-indigo/30';
-    let shadowStyle = 'shadow-neon-indigo/15';
-    let iconColor = 'text-neon-indigo';
-    
-    if (type === 'success') {
-        icon = 'fa-circle-check';
-        borderStyle = 'border-neon-emerald/30';
-        shadowStyle = 'shadow-neon-emerald/15';
-        iconColor = 'text-neon-emerald';
-    } else if (type === 'error') {
-        icon = 'fa-triangle-exclamation';
-        borderStyle = 'border-neon-rose/30';
-        shadowStyle = 'shadow-neon-rose/15';
-        iconColor = 'text-neon-rose';
-    } else if (type === 'warning') {
-        icon = 'fa-triangle-exclamation';
-        borderStyle = 'border-neon-violet/30';
-        shadowStyle = 'shadow-neon-violet/15';
-        iconColor = 'text-neon-violet';
-    }
-
-    toast.className = `glass-panel px-4 py-3.5 rounded-2xl border ${borderStyle} ${shadowStyle} shadow-lg flex items-center gap-3.5 max-w-sm pointer-events-auto transition-all duration-500 transform translate-x-12 opacity-0`;
-    toast.innerHTML = `
-        <div class="text-md ${iconColor}">
-            <i class="fa-solid ${icon}"></i>
-        </div>
-        <div class="text-[11px] text-slate-200 font-semibold tracking-wide leading-normal">
-            ${message}
-        </div>
-    `;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => { toast.classList.remove('translate-x-12', 'opacity-0'); }, 10);
-    setTimeout(() => {
-        toast.classList.add('translate-x-12', 'opacity-0');
-        setTimeout(() => toast.remove(), 500);
-    }, 3500);
+// --- Local Storage Helpers ---
+function saveScheduleLocal(schedule) {
+    localStorage.setItem('aura_schedule', JSON.stringify(schedule));
+}
+function loadScheduleLocal() {
+    const data = localStorage.getItem('aura_schedule');
+    return data ? JSON.parse(data) : null;
 }
 
-function updateHoursDisplay(value) {
-    document.getElementById('hours-display').innerText = `${value} 시간`;
-}
-
-// Subjects & Goals Management
-let subjects = [];
-
-function renderSubjects() {
-    const listDiv = document.getElementById('subject-list');
-    listDiv.innerHTML = '';
-    
-    if (subjects.length === 0) {
-        listDiv.innerHTML = `
-            <div class="text-center py-6 text-slate-500 text-xs font-medium border border-dashed border-white/5 rounded-xl">
-                추가된 과목이 없습니다. 과목을 추가해 주세요!
-            </div>
-        `;
-        return;
-    }
-
-    subjects.forEach((sub, idx) => {
-        const subCard = document.createElement('div');
-        subCard.className = "bg-dark-900/40 p-4 rounded-xl border border-white/5 flex justify-between items-start glass-panel-interactive mb-3";
+// --- Navigation ---
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
         
-        let goalsHtml = '';
-        sub.goals.forEach(g => {
-            if (g.trim()) goalsHtml += `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-neon-violet"></span>${g}</li>`;
-        });
+        const targetId = item.getAttribute('data-target');
+        document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
+        document.getElementById(targetId).classList.remove('hidden');
+    });
+});
 
-        subCard.innerHTML = `
-            <div class="flex-grow pr-3">
-                <h4 class="text-xs font-bold text-neon-violet font-tech tracking-wider">${sub.name}</h4>
-                <ul class="text-[10px] text-slate-400 mt-2 space-y-1.5 font-medium">
-                    ${goalsHtml}
-                </ul>
+// --- Dynamic Goal Inputs ---
+const goalsList = document.getElementById('goals-list');
+
+goalsList.addEventListener('click', e => {
+    if (e.target.classList.contains('add-detail-btn')) {
+        const detailsList = e.target.previousElementSibling;
+        const newDetail = document.createElement('div');
+        newDetail.className = 'detail-item';
+        newDetail.style.display = 'flex';
+        newDetail.style.gap = '8px';
+        newDetail.style.marginBottom = '0.5rem';
+        newDetail.style.alignItems = 'center';
+        newDetail.innerHTML = `
+            <input type="text" placeholder="Details (e.g. Master Pointers)" class="input-field desc-input" required style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+                <input type="number" placeholder="h" class="input-field hours-input" min="0" max="168" value="2" required style="width: 60px; padding-right: 5px;">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">h</span>
+                <input type="number" placeholder="m" class="input-field mins-input" min="0" max="59" value="0" required style="width: 60px; padding-right: 5px;">
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">m</span>
             </div>
-            <button onclick="removeSubject(${idx})" class="text-slate-500 hover:text-neon-rose hover:scale-110 transition-all p-1.5 rounded-lg hover:bg-neon-rose/10">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
+            <button type="button" class="btn-delete-detail" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; padding: 0 5px;" title="Delete Goal">×</button>
         `;
-        listDiv.appendChild(subCard);
-    });
-}
+        detailsList.appendChild(newDetail);
+    } else if (e.target.classList.contains('btn-delete-detail')) {
+        e.target.closest('.detail-item').remove();
+    } else if (e.target.classList.contains('btn-delete-subject')) {
+        e.target.closest('.subject-group').remove();
+    }
+});
 
-window.addSubject = function() {
-    const nameInput = document.getElementById('subject-name');
-    const goalInputs = document.querySelectorAll('.sub-goal');
+document.getElementById('add-goal-btn').addEventListener('click', () => {
+    const firstGroup = document.querySelector('.subject-group');
+    const newGroup = firstGroup.cloneNode(true);
+    newGroup.querySelector('.subject-input').value = '';
     
-    if (!nameInput.value.trim()) {
-        showToast('과목명을 입력해 주세요!', 'warning');
-        return;
+    const details = newGroup.querySelectorAll('.detail-item');
+    for (let i = 1; i < details.length; i++) {
+        details[i].remove();
     }
-
-    const goals = [];
-    goalInputs.forEach(input => {
-        if(input.value.trim()) goals.push(input.value.trim());
-    });
-
-    if (goals.length === 0) {
-        showToast('최소 1개 이상의 세부 목표를 작성해야 합니다.', 'warning');
-        return;
-    }
-
-    subjects.push({ name: nameInput.value.trim(), goals: goals });
-
-    nameInput.value = '';
-    goalInputs.forEach(input => input.value = '');
+    details[0].querySelector('.desc-input').value = '';
+    details[0].querySelector('.hours-input').value = '2';
+    details[0].querySelector('.mins-input').value = '0';
     
-    renderSubjects();
-    showToast('과목 및 목표 리스트가 정상 등록되었습니다.', 'success');
-}
+    goalsList.appendChild(newGroup);
+});
 
-window.removeSubject = function(idx) {
-    subjects.splice(idx, 1);
-    renderSubjects();
-    showToast('과목이 정상 삭제되었습니다.', 'info');
-}
-
-// Generate Schedule API Call
-window.triggerGenerateSchedule = async function() {
-    if (subjects.length === 0) {
-        showToast('최소 한 개 이상의 과목을 등록해 주세요.', 'error');
-        return;
-    }
-
-    const placeholder = document.getElementById('placeholder-state');
-    const loader = document.getElementById('loader-state');
-    const grid = document.getElementById('calendar-grid');
-    const spinner = document.getElementById('spinner');
-    const magicIcon = document.getElementById('magic-icon');
-
-    if(placeholder) placeholder.classList.add('hidden');
-    grid.classList.add('hidden');
-    loader.classList.remove('hidden');
-    spinner.classList.remove('hidden');
-    magicIcon.classList.add('hidden');
-
-    // Prepare payload
-    const totalHours = parseInt(document.getElementById('hours').value) || 24;
+// --- Generate Schedule ---
+document.getElementById('goal-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    
     const goalsPayload = [];
-    
-    // Distribute hours evenly for now as approximation, or use default
-    const hoursPerGoal = (totalHours * 60) / (subjects.reduce((acc, sub) => acc + sub.goals.length, 0) || 1);
-    
-    subjects.forEach(sub => {
-        sub.goals.forEach(g => {
+    document.querySelectorAll('.subject-group').forEach(group => {
+        const subject = group.querySelector('.subject-input').value;
+        group.querySelectorAll('.detail-item').forEach(item => {
+            const desc = item.querySelector('.desc-input').value;
+            const h = parseInt(item.querySelector('.hours-input').value) || 0;
+            const m = parseInt(item.querySelector('.mins-input').value) || 0;
+            
             goalsPayload.push({
-                subject: sub.name,
-                description: g,
-                duration_minutes: Math.round(hoursPerGoal)
+                subject: subject,
+                description: desc,
+                duration_minutes: (h * 60) + m
             });
         });
     });
 
+    const overlay = document.getElementById('loading-overlay');
+    overlay.classList.remove('hidden');
+
     try {
         const response = await fetch(`${API_BASE_URL}/generate_schedule/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ goals: goalsPayload })
         });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        saveScheduleLocal(data);
+        renderSchedule(data);
         
-        if (!response.ok) throw new Error('Failed to generate schedule');
+        // Go to Dashboard
+        document.querySelector('[data-target="dashboard-view"]').click();
         
-        const scheduleData = await response.json();
-        
-        loader.classList.add('hidden');
-        grid.classList.remove('hidden');
-        spinner.classList.add('hidden');
-        magicIcon.classList.remove('hidden');
-        showToast('Gemini 최적화 시간표가 성공적으로 빌드되었습니다.', 'success');
-        
-        renderScheduleToGrid(scheduleData);
-        updateProgressUI(scheduleData);
     } catch (error) {
-        console.error(error);
-        loader.classList.add('hidden');
-        spinner.classList.add('hidden');
-        magicIcon.classList.remove('hidden');
-        showToast('서버 연결 실패. 배포 설정을 확인해 주세요.', 'error');
+        console.error("Error generating schedule:", error);
+        alert("Failed to generate schedule. Please check the backend connection.");
+    } finally {
+        overlay.classList.add('hidden');
     }
-}
+});
 
-// Map english days to korean for beautiful UI
-const dayMap = {
-    'Monday': '월요일', 'Tuesday': '화요일', 'Wednesday': '수요일',
-    'Thursday': '목요일', 'Friday': '금요일', 'Saturday': '토요일', 'Sunday': '일요일'
-};
-const colorClasses = ['neon-violet', 'neon-indigo', 'neon-rose', 'neon-cyan', 'neon-emerald'];
-
-function renderScheduleToGrid(scheduleData) {
-    const grid = document.getElementById('calendar-grid');
-    if (!grid) return;
+function renderSchedule(scheduleData) {
+    const timeline = document.getElementById('schedule-timeline');
+    const daysTabs = document.getElementById('days-tabs');
     
+    timeline.innerHTML = '';
+    daysTabs.innerHTML = '';
+
     if (!scheduleData || scheduleData.length === 0) {
-        grid.innerHTML = '<div class="text-center p-8">No schedule data available.</div>';
+        timeline.innerHTML = '<div class="empty-state">No schedule generated yet.</div>';
         return;
     }
 
-    // Group by day
-    const grouped = {};
+    const groupedByDay = {};
     scheduleData.forEach(item => {
-        if (!grouped[item.day_of_week]) grouped[item.day_of_week] = [];
-        grouped[item.day_of_week].push(item);
+        if (!groupedByDay[item.day_of_week]) {
+            groupedByDay[item.day_of_week] = [];
+        }
+        groupedByDay[item.day_of_week].push(item);
     });
 
-    const order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const sortedDays = Object.keys(grouped).sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const activeDays = Object.keys(groupedByDay).sort((a, b) => daysOrder.indexOf(a) - daysOrder.indexOf(b));
 
-    let html = '<div class="grid grid-cols-1 md:grid-cols-5 gap-4">';
-    
-    sortedDays.forEach((day, index) => {
-        const color = colorClasses[index % colorClasses.length];
-        const dayItems = grouped[day];
-        dayItems.sort((a, b) => a.start_time.localeCompare(b.start_time));
-        
-        let totalMins = dayItems.reduce((acc, curr) => acc + curr.duration_minutes, 0);
-        let hours = (totalMins / 60).toFixed(1);
+    let isFirst = true;
 
-        html += `
-        <div class="bg-dark-900/20 border border-white/5 p-4 rounded-2xl flex flex-col min-h-[350px] relative">
-            <div class="absolute top-0 left-0 w-full h-[2px] bg-${color} rounded-full"></div>
-            <span class="text-xs font-bold text-slate-300 block pb-3 border-b border-white/5 mb-4 text-center font-tech">${dayMap[day] || day} <span class="text-[10px] font-normal block text-${color} mt-0.5">${hours}h Study</span></span>
-            <div class="space-y-3 flex-grow">
-        `;
-
-        dayItems.forEach(item => {
-            const isCompleted = item.progress === 'completed';
-            const borderOpa = isCompleted ? '30' : '20';
-            const bgOpa = isCompleted ? '20' : '5';
-            const checkIcon = isCompleted ? '<i class="fa-solid fa-check text-neon-emerald ml-1"></i>' : '';
+    activeDays.forEach(day => {
+        // Create Tab
+        const tab = document.createElement('button');
+        tab.className = `btn btn-text ${isFirst ? 'active' : ''}`;
+        tab.textContent = day;
+        tab.style.padding = '5px 10px';
+        tab.onclick = () => {
+            document.querySelectorAll('#days-tabs button').forEach(b => b.classList.remove('active'));
+            tab.classList.add('active');
             
-            html += `
-                <div onclick="startSession(${item.id}, ${item.duration_minutes}, '${item.topic}')" class="p-3 bg-${color}/${bgOpa} border border-${color}/${borderOpa} rounded-xl glass-panel-interactive cursor-pointer relative overflow-hidden group">
-                    <div class="w-1 h-8 bg-${color} absolute left-0 top-1/2 -translate-y-1/2 rounded-r-md"></div>
-                    <span class="text-[9px] uppercase font-bold tracking-wider text-${color} font-tech">${item.subject}</span>
-                    <p class="text-xs font-bold mt-1 text-slate-200 group-hover:text-white transition-colors">${item.topic} ${checkIcon}</p>
-                    <span class="text-[9px] block text-slate-400 mt-2.5 flex justify-between">
-                        <span><i class="fa-regular fa-clock mr-1"></i> ${item.start_time}-${item.end_time}</span>
-                        <span class="text-${color}">Start ▶</span>
-                    </span>
-                </div>
+            document.querySelectorAll('.day-timeline').forEach(dt => dt.classList.add('hidden'));
+            document.getElementById(`timeline-${day}`).classList.remove('hidden');
+        };
+        daysTabs.appendChild(tab);
+
+        // Create Timeline Content
+        const dayContainer = document.createElement('div');
+        dayContainer.className = `day-timeline ${isFirst ? '' : 'hidden'}`;
+        dayContainer.id = `timeline-${day}`;
+        dayContainer.style.display = 'flex';
+        dayContainer.style.flexDirection = 'column';
+        dayContainer.style.gap = '1rem';
+
+        groupedByDay[day].forEach(item => {
+            const div = document.createElement('div');
+            div.style.background = 'rgba(255,255,255,0.05)';
+            div.style.padding = '1rem';
+            div.style.borderRadius = '8px';
+            div.style.borderLeft = '4px solid var(--primary-color)';
+            div.innerHTML = `
+                <div style="color: var(--primary-color); font-weight: bold; font-size: 0.9rem; margin-bottom: 5px;">${item.start_time} - ${item.end_time}</div>
+                <h4 style="margin: 0 0 5px 0;">${item.subject}</h4>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${item.topic}</p>
             `;
+            dayContainer.appendChild(div);
         });
 
-        html += `</div></div>`;
+        timeline.appendChild(dayContainer);
+        isFirst = false;
     });
-
-    html += '</div>'; // End grid
-    
-    // Feedback Panel
-    html += `
-    <div class="p-4 md:p-5 bg-dark-900/60 rounded-2xl border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-6">
-        <div class="flex items-center gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-neon-violet/10 flex items-center justify-center text-neon-violet text-md border border-neon-violet/20 shadow-neon-violet/5">
-                <i class="fa-solid fa-wand-magic"></i>
-            </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-200">AI 피드백 및 스케줄 최적화 완료</h4>
-                <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">학습의 연속성을 해치지 않도록 일일 학습시간을 설정하고 분배했습니다.</p>
-            </div>
-        </div>
-        <button onclick="showToast('동기화 완료', 'info')" class="w-full sm:w-auto px-4 py-2 bg-white/5 hover:bg-white/10 text-[11px] text-slate-300 font-bold rounded-xl border border-white/10 transition-colors">데이터 리로드</button>
-    </div>
-    `;
-
-    grid.innerHTML = html;
 }
 
-// Fetch Existing Schedules on Load
-async function loadSchedules() {
+// Check for existing schedule on load
+const saved = loadScheduleLocal();
+if (saved) {
+    renderSchedule(saved);
+}
+
+// Reset Schedule
+document.getElementById('reset-schedule-btn').addEventListener('click', () => {
+    if(confirm("Are you sure you want to reset your schedule?")) {
+        localStorage.removeItem('aura_schedule');
+        renderSchedule(null);
+    }
+});
+
+// --- AI Tutor Chat ---
+document.getElementById('tutor-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const inputField = document.getElementById('tutor-input');
+    const question = inputField.value.trim();
+    if(!question) return;
+
+    const chatBox = document.getElementById('tutor-chat-box');
+    
+    // Add user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chat-message user-message';
+    userMsg.style.cssText = 'align-self: flex-end; background: var(--primary-color); padding: 1rem; border-radius: 12px; max-width: 80%; color: white;';
+    userMsg.textContent = question;
+    chatBox.appendChild(userMsg);
+    
+    inputField.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Add typing indicator
+    const typingIndicator = document.createElement('div');
+    typingIndicator.id = 'ai-typing-indicator';
+    typingIndicator.className = 'chat-message ai-message';
+    typingIndicator.style.cssText = 'align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;';
+    typingIndicator.innerHTML = '<span style="font-size: 1.2rem; line-height: 1;">💬</span> AI 튜터가 답변을 작성하고 있습니다...';
+    chatBox.appendChild(typingIndicator);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
     try {
-        const res = await fetch(`${API_BASE_URL}/schedules/`);
-        if (res.ok) {
-            const data = await res.json();
-            if (data.length > 0) {
-                const placeholder = document.getElementById('placeholder-state');
-                const grid = document.getElementById('calendar-grid');
-                if(placeholder) placeholder.classList.add('hidden');
-                if(grid) {
-                    grid.classList.remove('hidden');
-                    renderScheduleToGrid(data);
-                    updateProgressUI(data);
-                }
-            }
-        }
-    } catch(e) {
-        console.warn('Could not fetch initial schedules');
-    }
-}
-
-function updateProgressUI(data) {
-    const total = data.length;
-    const completed = data.filter(d => d.progress === 'completed').length;
-    const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
-    
-    document.getElementById('stat-rate').innerHTML = `${rate}% <span class="text-xs text-neon-emerald font-semibold ml-1 flex items-center gap-0.5"><i class="fa-solid fa-bolt"></i> 진행중</span>`;
-    document.getElementById('stat-progress-bar').style.width = `${rate}%`;
-}
-
-
-// POMODORO TIMER LOGIC
-let timer;
-let isRunning = false;
-let timeLeft = 25 * 60; // default 25 min
-let maxTime = 25 * 60;
-window.activeSessionId = null;
-
-const timerDisplay = document.getElementById('timer-display');
-const timerBtn = document.getElementById('timer-btn');
-const timerProgress = document.getElementById('timer-progress');
-
-window.updateTimerDisplay = function() {
-    if(!timerDisplay) return;
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    timerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    const strokeDashoffset = 402 - (timeLeft / maxTime) * 402;
-    if(timerProgress) timerProgress.setAttribute('stroke-dashoffset', strokeDashoffset);
-}
-
-window.startSession = function(id, duration, topic) {
-    window.activeSessionId = id;
-    // Set timer to the scheduled duration (or cap at 60 mins for focus)
-    maxTime = Math.min(duration * 60, 60 * 60);
-    timeLeft = maxTime;
-    updateTimerDisplay();
-    showToast(`"${topic}" 세션을 시작합니다! 위 타이머의 시작 버튼을 누르세요.`, 'info');
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.toggleTimer = function() {
-    if (isRunning) {
-        clearInterval(timer);
-        timerBtn.innerText = "계속";
-        timerBtn.className = "flex-1 py-2.5 bg-gradient-to-r from-neon-indigo to-neon-cyan text-xs font-bold rounded-xl transition-all duration-300 shadow-neon-cyan/20";
-        isRunning = false;
-        showToast('타이머가 일시 정지되었습니다.', 'info');
-    } else {
-        isRunning = true;
-        timerBtn.innerText = "일시정지";
-        timerBtn.className = "flex-1 py-2.5 bg-gradient-to-r from-neon-rose to-orange-500 text-xs font-bold rounded-xl transition-all duration-300 shadow-neon-rose/20";
-        showToast('집중 세션이 시작되었습니다. 파이팅!', 'success');
-        
-        timer = setInterval(() => {
-            if (timeLeft > 0) {
-                timeLeft--;
-                updateTimerDisplay();
-            } else {
-                clearInterval(timer);
-                showToast('세션 종료! 데이터 동기화 중...', 'success');
-                resetTimer();
-                markSessionComplete();
-            }
-        }, 1000);
-    }
-}
-
-window.resetTimer = function() {
-    clearInterval(timer);
-    isRunning = false;
-    timeLeft = maxTime;
-    if(timerBtn) {
-        timerBtn.innerText = "시작";
-        timerBtn.className = "flex-1 py-2.5 bg-gradient-to-r from-neon-violet to-neon-indigo text-xs font-bold rounded-xl transition-all duration-300 shadow-neon-violet/20";
-    }
-    updateTimerDisplay();
-}
-
-async function markSessionComplete() {
-    if (!window.activeSessionId) return;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/schedules/${window.activeSessionId}/progress?progress=completed`, {
-            method: 'PUT'
+        const response = await fetch(`${API_BASE_URL}/tutor/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: question })
         });
-        if (response.ok) {
-            showToast('목표 달성이 서버에 기록되었습니다!', 'success');
-            loadSchedules(); // Reload UI
-        }
-    } catch(e) {
-        console.error(e);
-    }
-}
 
-// Initial load
-window.onload = function() {
-    renderSubjects();
-    updateTimerDisplay();
-    loadSchedules();
-}
+        if (!response.ok) throw new Error('Failed to fetch tutor response');
+
+        const data = await response.json();
+        
+        // Remove typing indicator
+        const indicator = document.getElementById('ai-typing-indicator');
+        if (indicator) indicator.remove();
+        
+        // Add AI response
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai-message';
+        aiMsg.style.cssText = 'align-self: flex-start; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%;';
+        aiMsg.innerHTML = data.answer;
+        chatBox.appendChild(aiMsg);
+        
+    } catch(err) {
+        console.error(err);
+        
+        // Remove typing indicator
+        const indicator = document.getElementById('ai-typing-indicator');
+        if (indicator) indicator.remove();
+        
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'chat-message ai-message';
+        aiMsg.style.cssText = 'align-self: flex-start; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1rem; border-radius: 12px; max-width: 80%; color: #fca5a5;';
+        aiMsg.textContent = 'Sorry, the AI Tutor is currently unavailable.';
+        chatBox.appendChild(aiMsg);
+    }
+    
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
