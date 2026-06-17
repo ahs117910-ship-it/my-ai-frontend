@@ -185,7 +185,3 @@ def get_reviews(db: Session = Depends(database.get_db)):
 def ask_tutor_endpoint(question_data: schemas.TutorQuestion):
     answer = ai_service.ask_tutor(question_data.question)
     return {"answer": answer}
-
-# Serve the frontend (HTML/CSS/JS) directly from this server
-from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
