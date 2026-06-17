@@ -47,8 +47,8 @@ def create_goals_and_schedule(input_form: schemas.GoalInputForm, db: Session = D
     goals_data = [{"subject": g.subject, "description": g.description, "duration_minutes": g.duration_minutes} for g in input_form.goals]
     schedule_data = ai_service.generate_schedule(goals_data, total_available_hours)
     
-    if not schedule_data:
-        raise HTTPException(status_code=500, detail="Failed to generate schedule from AI")
+    if schedule_data is None:
+        raise HTTPException(status_code=500, detail="Failed to generate schedule")
 
     # 3. Save Schedule to DB
     saved_schedules = []
