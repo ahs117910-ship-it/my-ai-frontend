@@ -187,4 +187,6 @@ def ask_tutor_endpoint(question_data: schemas.TutorQuestion):
     return {"answer": answer}
 
 # Mount the frontend directory so we only need one server!
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
+import os as _os
+_frontend_path = "frontend" if _os.path.exists("frontend") else "../frontend"
+app.mount("/", StaticFiles(directory=_frontend_path, html=True), name="frontend")
