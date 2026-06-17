@@ -5,11 +5,11 @@ const translations = {
         "nav-goals": "🎯 Set Goals",
         "nav-timer": "⏱️ Pomodoro",
         "nav-review": "📝 Daily Review",
-        
+
         // Header
         "header-title": "Welcome back! 👋",
         "header-subtitle": "Let's make today productive.",
-        
+
         // Goals
         "goals-title": "Set Your Weekly Goals",
         "add-goal-btn": "+ Add New Subject",
@@ -18,12 +18,12 @@ const translations = {
         "generate-btn": "✨ Generate AI Schedule",
         "subject-placeholder": "Subject (e.g. C++)",
         "details-placeholder": "Details (e.g. Master Pointers)",
-        
+
         // Dashboard
         "dash-title": "Your Weekly AI Schedule",
         "btn-reset-schedule": "Reset All",
         "dash-empty": "No schedule yet. Set your goals first!",
-        
+
         // Timer
         "timer-title": "Pomodoro Timer",
         "btn-start": "Start",
@@ -35,7 +35,7 @@ const translations = {
         "btn-fully": "Fully Achieved",
         "btn-partial": "Partially Achieved",
         "btn-not": "Not Achieved",
-        
+
         // Review
         "review-stats-title": "Overall Progress Stats",
         "stat-label-total": "Total Sessions",
@@ -50,7 +50,7 @@ const translations = {
         "review-notes-placeholder": "How did today go? What could be improved?",
         "btn-submit-review": "Submit Review",
         "coaching-title": "✨ AI Study Coach Feedback",
-        
+
         // JS Alerts
         "alert-gen-error": "There was an error generating the schedule. Please try again.",
         "alert-no-session": "No active session selected. Go back to Dashboard and click Start on a session.",
@@ -65,11 +65,11 @@ const translations = {
         "nav-goals": "🎯 목표 설정",
         "nav-timer": "⏱️ 뽀모도로",
         "nav-review": "📝 일일 리뷰",
-        
+
         // Header
         "header-title": "환영합니다! 👋",
         "header-subtitle": "오늘도 알찬 하루를 만들어봐요.",
-        
+
         // Goals
         "goals-title": "주간 목표 설정",
         "add-goal-btn": "+ 새 과목 추가하기",
@@ -78,12 +78,12 @@ const translations = {
         "generate-btn": "✨ AI 스케줄 생성하기",
         "subject-placeholder": "과목명 (예: C++)",
         "details-placeholder": "세부 목표 (예: 포인터 마스터)",
-        
+
         // Dashboard
         "dash-title": "이번 주 AI 추천 스케줄",
         "btn-reset-schedule": "전체 초기화",
         "dash-empty": "아직 스케줄이 없습니다. 먼저 목표를 설정해주세요!",
-        
+
         // Timer
         "timer-title": "뽀모도로 타이머",
         "btn-start": "시작",
@@ -95,7 +95,7 @@ const translations = {
         "btn-fully": "완벽히 달성",
         "btn-partial": "절반 달성",
         "btn-not": "미달성",
-        
+
         // Review
         "review-stats-title": "전체 진행 통계",
         "stat-label-total": "총 세션",
@@ -110,7 +110,7 @@ const translations = {
         "review-notes-placeholder": "오늘 공부는 어땠나요? 개선할 점이 있나요?",
         "btn-submit-review": "리뷰 제출하기",
         "coaching-title": "✨ AI 학습 코칭 피드백",
-        
+
         // JS Alerts
         "alert-gen-error": "스케줄을 생성하는 중 오류가 발생했습니다. 다시 시도해주세요.",
         "alert-no-session": "선택된 세션이 없습니다. 대시보드에서 세션의 시작 버튼을 눌러주세요.",
@@ -123,11 +123,11 @@ const translations = {
 
 function setLanguage(lang) {
     const t = translations[lang];
-    if(!t) return;
+    if (!t) return;
     
     // Save preference
     localStorage.setItem('preferredLang', lang);
-    
+
     // Make texts available globally for JS alerts
     window.i18n = t;
 
@@ -149,15 +149,15 @@ function setLanguage(lang) {
 // Init Language on Load
 document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('preferredLang') || 'en';
-    
+
     // Set dropdown value if exists
     const langSelect = document.getElementById('lang-select');
-    if(langSelect) {
+    if (langSelect) {
         langSelect.value = savedLang;
         langSelect.addEventListener('change', (e) => {
             setLanguage(e.target.value);
         });
     }
-    
+
     setLanguage(savedLang);
 });
