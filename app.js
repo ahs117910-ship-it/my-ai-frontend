@@ -69,6 +69,63 @@ document.getElementById('add-goal-btn').addEventListener('click', () => {
     goalsList.appendChild(newGroup);
 });
 
+function prefillGoalsForm() {
+    const savedGoals = localStorage.getItem('aura_goals');
+    if (!savedGoals) return;
+    
+    try {
+        const goals = JSON.parse(savedGoals);
+        if (!goals || goals.length === 0) return;
+        
+        const firstGroup = document.querySelector('.subject-group');
+        const list = document.getElementById('goals-list');
+        list.innerHTML = '';
+        
+        // Group by subject to reconstruct the UI
+        const grouped = {};
+        goals.forEach(g => {
+            if(!grouped[g.subject]) grouped[g.subject] = [];
+            grouped[g.subject].push(g);
+        });
+        
+        for (const [subject, details] of Object.entries(grouped)) {
+            const group = firstGroup.cloneNode(true);
+            group.querySelector('.subject-input').value = subject;
+            
+            const detailsContainer = group.querySelector('.details-list');
+            detailsContainer.innerHTML = '';
+            
+            details.forEach((d, idx) => {
+                const newDetail = document.createElement('div');
+                newDetail.className = 'detail-item';
+                newDetail.style.display = 'flex';
+                newDetail.style.gap = '8px';
+                newDetail.style.marginBottom = '0.5rem';
+                newDetail.style.alignItems = 'center';
+                
+                const h = Math.floor(d.duration_minutes / 60);
+                const m = d.duration_minutes % 60;
+                
+                newDetail.innerHTML = `
+                    <input type="text" placeholder="Details (e.g. Master Pointers)" class="input-field desc-input" required style="flex: 1;" value="${d.description}">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <input type="number" placeholder="h" class="input-field hours-input" min="0" max="168" value="${h}" required style="width: 60px; padding-right: 5px;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">h</span>
+                        <input type="number" placeholder="m" class="input-field mins-input" min="0" max="59" value="${m}" required style="width: 60px; padding-right: 5px;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">m</span>
+                    </div>
+                    ${idx > 0 ? '<button type="button" class="btn-delete-detail" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; padding: 0 5px;" title="Delete Goal">×</button>' : ''}
+                `;
+                detailsContainer.appendChild(newDetail);
+            });
+            list.appendChild(group);
+        }
+    } catch(e) {
+        console.error("Error prefilling goals", e);
+    }
+}
+prefillGoalsForm();
+
 // --- Generate Schedule ---
 document.getElementById('goal-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -88,6 +145,8 @@ document.getElementById('goal-form').addEventListener('submit', async e => {
             });
         });
     });
+
+    localStorage.setItem('aura_goals', JSON.stringify(goalsPayload));
 
     const overlay = document.getElementById('loading-overlay');
     overlay.classList.remove('hidden');
