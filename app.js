@@ -240,6 +240,90 @@ document.getElementById('reset-schedule-btn').addEventListener('click', () => {
     }
 });
 
+// --- Daily Review Logic ---
+const reviewDateInput = document.getElementById('review-date');
+if (reviewDateInput) {
+    reviewDateInput.addEventListener('change', (e) => {
+        const dateStr = e.target.value;
+        if(!dateStr) return;
+        
+        const date = new Date(dateStr);
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayOfWeek = days[date.getDay()];
+        
+        const saved = loadScheduleLocal();
+        const reviewList = document.getElementById('review-task-list');
+        reviewList.innerHTML = '';
+        
+        if(!saved || saved.length === 0) {
+            reviewList.innerHTML = '<div class="empty-state">No schedule found. Generate one first!</div>';
+            return;
+        }
+        
+        const dayTasks = saved.filter(t => t.day_of_week === dayOfWeek);
+        
+        if(dayTasks.length === 0) {
+            reviewList.innerHTML = `<div class="empty-state">No tasks scheduled for ${dayOfWeek}.</div>`;
+            return;
+        }
+        
+        dayTasks.forEach(task => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '10px';
+            div.style.padding = '8px';
+            div.style.borderBottom = '1px solid var(--border-color)';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'review-task-checkbox';
+            checkbox.style.width = '18px';
+            checkbox.style.height = '18px';
+            
+            const label = document.createElement('div');
+            label.innerHTML = `<strong>${task.subject || 'Unknown'}</strong>: ${task.topic}`;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            reviewList.appendChild(div);
+        });
+    });
+}
+
+const reviewForm = document.getElementById('review-form');
+if(reviewForm) {
+    reviewForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const notes = document.getElementById('review-notes').value;
+        const checkboxes = document.querySelectorAll('.review-task-checkbox');
+        const missed = [];
+        checkboxes.forEach(cb => {
+            if(!cb.checked) {
+                missed.push(cb.nextElementSibling.textContent);
+            }
+        });
+        
+        const coachContainer = document.getElementById('ai-coaching-container');
+        const coachContent = document.getElementById('coaching-content');
+        coachContainer.classList.remove('hidden');
+        coachContent.innerHTML = '<em>AI 튜터가 리뷰를 분석하고 조언을 작성 중입니다... ⏳</em>';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/review/coaching`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: notes, missed_tasks: missed })
+            });
+            if(!response.ok) throw new Error('Failed');
+            const data = await response.json();
+            coachContent.innerHTML = data.feedback;
+        } catch(err) {
+            coachContent.innerHTML = '<span style="color:var(--danger-color);">피드백을 불러오는 데 실패했습니다. 다시 시도해주세요.</span>';
+        }
+    });
+}
+
 // --- AI Tutor Chat Memory & History ---
 let currentChatId = null;
 
