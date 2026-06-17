@@ -69,6 +69,63 @@ document.getElementById('add-goal-btn').addEventListener('click', () => {
     goalsList.appendChild(newGroup);
 });
 
+function prefillGoalsForm() {
+    const savedGoals = localStorage.getItem('aura_goals');
+    if (!savedGoals) return;
+    
+    try {
+        const goals = JSON.parse(savedGoals);
+        if (!goals || goals.length === 0) return;
+        
+        const firstGroup = document.querySelector('.subject-group');
+        const list = document.getElementById('goals-list');
+        list.innerHTML = '';
+        
+        // Group by subject to reconstruct the UI
+        const grouped = {};
+        goals.forEach(g => {
+            if(!grouped[g.subject]) grouped[g.subject] = [];
+            grouped[g.subject].push(g);
+        });
+        
+        for (const [subject, details] of Object.entries(grouped)) {
+            const group = firstGroup.cloneNode(true);
+            group.querySelector('.subject-input').value = subject;
+            
+            const detailsContainer = group.querySelector('.details-list');
+            detailsContainer.innerHTML = '';
+            
+            details.forEach((d, idx) => {
+                const newDetail = document.createElement('div');
+                newDetail.className = 'detail-item';
+                newDetail.style.display = 'flex';
+                newDetail.style.gap = '8px';
+                newDetail.style.marginBottom = '0.5rem';
+                newDetail.style.alignItems = 'center';
+                
+                const h = Math.floor(d.duration_minutes / 60);
+                const m = d.duration_minutes % 60;
+                
+                newDetail.innerHTML = `
+                    <input type="text" placeholder="Details (e.g. Master Pointers)" class="input-field desc-input" required style="flex: 1;" value="${d.description}">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <input type="number" placeholder="h" class="input-field hours-input" min="0" max="168" value="${h}" required style="width: 60px; padding-right: 5px;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">h</span>
+                        <input type="number" placeholder="m" class="input-field mins-input" min="0" max="59" value="${m}" required style="width: 60px; padding-right: 5px;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">m</span>
+                    </div>
+                    ${idx > 0 ? '<button type="button" class="btn-delete-detail" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem; padding: 0 5px;" title="Delete Goal">×</button>' : ''}
+                `;
+                detailsContainer.appendChild(newDetail);
+            });
+            list.appendChild(group);
+        }
+    } catch(e) {
+        console.error("Error prefilling goals", e);
+    }
+}
+prefillGoalsForm();
+
 // --- Generate Schedule ---
 document.getElementById('goal-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -88,6 +145,8 @@ document.getElementById('goal-form').addEventListener('submit', async e => {
             });
         });
     });
+
+    localStorage.setItem('aura_goals', JSON.stringify(goalsPayload));
 
     const overlay = document.getElementById('loading-overlay');
     overlay.classList.remove('hidden');
@@ -157,6 +216,8 @@ function renderSchedule(scheduleData) {
             
             document.querySelectorAll('.day-timeline').forEach(dt => dt.classList.add('hidden'));
             document.getElementById(`timeline-${day}`).classList.remove('hidden');
+            
+            renderTodayTasks(day, groupedByDay);
         };
         daysTabs.appendChild(tab);
 
@@ -183,7 +244,44 @@ function renderSchedule(scheduleData) {
         });
 
         timeline.appendChild(dayContainer);
+        
+        if (isFirst) {
+            renderTodayTasks(day, groupedByDay);
+        }
         isFirst = false;
+    });
+}
+
+function renderTodayTasks(day, groupedByDay) {
+    const todayList = document.getElementById('today-tasks-list');
+    if (!todayList) return;
+    todayList.innerHTML = '';
+    
+    if (!groupedByDay[day]) {
+        todayList.innerHTML = '<div class="empty-state">No tasks for today.</div>';
+        return;
+    }
+    
+    groupedByDay[day].forEach(item => {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.gap = '10px';
+        div.style.padding = '10px';
+        div.style.borderBottom = '1px solid var(--border-color)';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.style.width = '18px';
+        checkbox.style.height = '18px';
+        checkbox.style.cursor = 'pointer';
+        
+        const textDiv = document.createElement('div');
+        textDiv.innerHTML = `<strong>${item.subject || 'Unknown'}</strong> <span style="color:var(--text-secondary); font-size:0.9rem;">(${item.duration_minutes}m)</span>`;
+        
+        div.appendChild(checkbox);
+        div.appendChild(textDiv);
+        todayList.appendChild(div);
     });
 }
 
@@ -200,6 +298,90 @@ document.getElementById('reset-schedule-btn').addEventListener('click', () => {
         renderSchedule(null);
     }
 });
+
+// --- Daily Review Logic ---
+const reviewDateInput = document.getElementById('review-date');
+if (reviewDateInput) {
+    reviewDateInput.addEventListener('change', (e) => {
+        const dateStr = e.target.value;
+        if(!dateStr) return;
+        
+        const date = new Date(dateStr);
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const dayOfWeek = days[date.getDay()];
+        
+        const saved = loadScheduleLocal();
+        const reviewList = document.getElementById('review-task-list');
+        reviewList.innerHTML = '';
+        
+        if(!saved || saved.length === 0) {
+            reviewList.innerHTML = '<div class="empty-state">No schedule found. Generate one first!</div>';
+            return;
+        }
+        
+        const dayTasks = saved.filter(t => t.day_of_week === dayOfWeek);
+        
+        if(dayTasks.length === 0) {
+            reviewList.innerHTML = `<div class="empty-state">No tasks scheduled for ${dayOfWeek}.</div>`;
+            return;
+        }
+        
+        dayTasks.forEach(task => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '10px';
+            div.style.padding = '8px';
+            div.style.borderBottom = '1px solid var(--border-color)';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'review-task-checkbox';
+            checkbox.style.width = '18px';
+            checkbox.style.height = '18px';
+            
+            const label = document.createElement('div');
+            label.innerHTML = `<strong>${task.subject || 'Unknown'}</strong>: ${task.topic}`;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            reviewList.appendChild(div);
+        });
+    });
+}
+
+const reviewForm = document.getElementById('review-form');
+if(reviewForm) {
+    reviewForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const notes = document.getElementById('review-notes').value;
+        const checkboxes = document.querySelectorAll('.review-task-checkbox');
+        const missed = [];
+        checkboxes.forEach(cb => {
+            if(!cb.checked) {
+                missed.push(cb.nextElementSibling.textContent);
+            }
+        });
+        
+        const coachContainer = document.getElementById('ai-coaching-container');
+        const coachContent = document.getElementById('coaching-content');
+        coachContainer.classList.remove('hidden');
+        coachContent.innerHTML = '<em>AI 튜터가 리뷰를 분석하고 조언을 작성 중입니다... ⏳</em>';
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/review/coaching`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: notes, missed_tasks: missed })
+            });
+            if(!response.ok) throw new Error('Failed');
+            const data = await response.json();
+            coachContent.innerHTML = data.feedback;
+        } catch(err) {
+            coachContent.innerHTML = '<span style="color:var(--danger-color);">피드백을 불러오는 데 실패했습니다. 다시 시도해주세요.</span>';
+        }
+    });
+}
 
 // --- AI Tutor Chat Memory & History ---
 let currentChatId = null;
