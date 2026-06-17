@@ -1,15 +1,16 @@
 import os
 import json
-import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# The user needs to set GROQ_API_KEY in their environment or .env file
+# The Groq client will automatically look for os.environ.get("GROQ_API_KEY")
 try:
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    groq_client = Groq()
 except Exception:
-    gemini_model = None
+    groq_client = None
 
 def generate_schedule(goals_data: list, total_hours: int):
     """
@@ -65,8 +66,8 @@ def generate_schedule(goals_data: list, total_hours: int):
     return schedule
 
 def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
-    if not gemini_model:
-        return "Gemini API Key is not configured properly."
+    if not groq_client:
+        return "Groq API Key is not configured properly."
         
     missed_str = ", ".join(missed_tasks) if missed_tasks else "None"
     
@@ -76,24 +77,35 @@ def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     Goals they missed today: {missed_str}
     
     Please read the reflection notes carefully and follow these guidelines:
-    1. Deeply analyze the user's emotional and physical state from their notes. Provide warm empathy and highly practical, tailored advice.
-    2. If the user asked any questions, answer them directly and helpfully.
-    3. Provide actionable tips on how to better manage their focus tomorrow.
-    4. Praise them enthusiastically for what they achieved.
+    1. Deeply analyze the user's emotional and physical state from their notes. If they express struggles (e.g., "I'm tired", "I woke up late", "I lost focus"), provide warm empathy and highly practical, tailored advice for their specific situation (e.g., refreshing tips for fatigue, morning routines for waking up late). Be flexible and context-aware.
+    2. If the user asked any questions in their notes, you MUST answer them directly and helpfully.
+    3. Provide actionable tips on how to better distribute their time or manage their focus tomorrow, especially if they missed goals.
+    4. If they achieved everything or show a positive attitude, praise them enthusiastically and encourage them to keep up the good habits.
     
     Format your response in HTML (using <strong>, <br>, etc.) so it looks good on a web dashboard. Do not use markdown syntax, just raw HTML strings.
     Respond in a friendly, conversational tone in Korean if the user's notes are in Korean, otherwise English.
     """
     
     try:
-        response = gemini_model.generate_content(prompt)
-        return response.text
+        completion = groq_client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "You are a helpful AI Study Coach."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+        )
+        return completion.choices[0].message.content
     except Exception as e:
         print(f"Error generating coaching feedback: {e}")
         return "Could not generate coaching feedback at this time."
 
 def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
-    if not gemini_model:
+    """
+    Logic for auto-rescheduling missed sessions.
+    (This is a simplified version for demonstration)
+    """
+    if not groq_client:
         return None
         
     prompt = f"""
@@ -110,8 +122,15 @@ def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
     """
     
     try:
-        response = gemini_model.generate_content(prompt)
-        text = response.text
+        completion = groq_client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "You output JSON arrays only."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+        )
+        text = completion.choices[0].message.content
         if text.startswith("```json"):
             text = text[7:-3].strip()
         elif text.startswith("```"):
@@ -119,20 +138,20 @@ def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
             
         return json.loads(text)
     except Exception as e:
-        print(f"Error calling Gemini API for rescheduling: {e}")
+        print(f"Error calling Groq API for rescheduling: {e}")
         return None
 
 def ask_tutor(question: str) -> str:
     """
-    Answers study-related questions using Gemini.
+    Answers study-related questions using Groq.
     """
+    # Force reload env to pick up any new keys without restarting the server
     load_dotenv(override=True)
     
     try:
-        genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
     except Exception:
-        return "서버에 GEMINI_API_KEY가 설정되지 않았습니다. Render 환경 변수를 확인해주세요."
+        return "서버에 GROQ_API_KEY가 설정되지 않았습니다. Render 환경 변수를 확인해주세요."
     
     prompt = f"""
     You are a friendly, encouraging AI Study Tutor.
@@ -146,9 +165,16 @@ def ask_tutor(question: str) -> str:
     Respond in the language the user asked the question in (usually Korean).
     """
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        completion = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "You are a helpful AI tutor."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
+        )
+        return completion.choices[0].message.content
     except Exception as e:
         error_msg = str(e)
-        print(f"Error calling Gemini for tutor: {error_msg}")
+        print(f"Error calling Groq for tutor: {error_msg}")
         return f"죄송합니다. 현재 AI 튜터가 질문에 답변할 수 없습니다. 에러: {error_msg}"
