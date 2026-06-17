@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Configure Gemini API
-# The user needs to set GEMINI_API_KEY in their environment or .env file
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+try:
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+except Exception:
+    gemini_model = None
 
 def generate_schedule(goals_data: list, total_hours: int):
     """
@@ -63,8 +65,9 @@ def generate_schedule(goals_data: list, total_hours: int):
     return schedule
 
 def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
-    model = genai.GenerativeModel('gemini-3.5-flash')
-    
+    if not gemini_model:
+        return "Gemini API Key is not configured properly."
+        
     missed_str = ", ".join(missed_tasks) if missed_tasks else "None"
     
     prompt = f"""
@@ -73,29 +76,26 @@ def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     Goals they missed today: {missed_str}
     
     Please read the reflection notes carefully and follow these guidelines:
-    1. Deeply analyze the user's emotional and physical state from their notes. If they express struggles (e.g., "I'm tired", "I woke up late", "I lost focus"), provide warm empathy and highly practical, tailored advice for their specific situation (e.g., refreshing tips for fatigue, morning routines for waking up late). Be flexible and context-aware.
-    2. If the user asked any questions in their notes, you MUST answer them directly and helpfully.
-    3. Provide actionable tips on how to better distribute their time or manage their focus tomorrow, especially if they missed goals.
-    4. If they achieved everything or show a positive attitude, praise them enthusiastically and encourage them to keep up the good habits.
+    1. Deeply analyze the user's emotional and physical state from their notes. Provide warm empathy and highly practical, tailored advice.
+    2. If the user asked any questions, answer them directly and helpfully.
+    3. Provide actionable tips on how to better manage their focus tomorrow.
+    4. Praise them enthusiastically for what they achieved.
     
     Format your response in HTML (using <strong>, <br>, etc.) so it looks good on a web dashboard. Do not use markdown syntax, just raw HTML strings.
     Respond in a friendly, conversational tone in Korean if the user's notes are in Korean, otherwise English.
     """
     
     try:
-        response = model.generate_content(prompt)
+        response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
         print(f"Error generating coaching feedback: {e}")
         return "Could not generate coaching feedback at this time."
 
 def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
-    """
-    Logic for auto-rescheduling missed sessions.
-    (This is a simplified version for demonstration)
-    """
-    model = genai.GenerativeModel('gemini-3.5-flash')
-    
+    if not gemini_model:
+        return None
+        
     prompt = f"""
     The user missed the following study sessions:
     {json.dumps(missed_sessions)}
@@ -110,7 +110,7 @@ def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
     """
     
     try:
-        response = model.generate_content(prompt)
+        response = gemini_model.generate_content(prompt)
         text = response.text
         if text.startswith("```json"):
             text = text[7:-3].strip()
@@ -126,11 +126,13 @@ def ask_tutor(question: str) -> str:
     """
     Answers study-related questions using Gemini.
     """
-    # Force reload env to pick up any new keys without restarting the server
     load_dotenv(override=True)
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
     
-    model = genai.GenerativeModel('gemini-3.5-flash')
+    try:
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+        model = genai.GenerativeModel('gemini-1.5-flash')
+    except Exception:
+        return "서버에 GEMINI_API_KEY가 설정되지 않았습니다. Render 환경 변수를 확인해주세요."
     
     prompt = f"""
     You are a friendly, encouraging AI Study Tutor.
@@ -149,6 +151,4 @@ def ask_tutor(question: str) -> str:
     except Exception as e:
         error_msg = str(e)
         print(f"Error calling Gemini for tutor: {error_msg}")
-        if "429" in error_msg or "quota" in error_msg.lower():
-            return "현재 사용량이 너무 많아 일시적으로 답변이 제한되었습니다. 잠시 후(약 1분) 다시 시도해 주세요. ⏳"
-        return f"죄송합니다. 현재 AI 튜터가 질문에 답변할 수 없습니다. (일시적인 오류)"
+        return f"죄송합니다. 현재 AI 튜터가 질문에 답변할 수 없습니다. 에러: {error_msg}"
