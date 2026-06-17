@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi.staticfiles import StaticFiles
+
 
 # (API endpoints start here)
 
@@ -186,7 +186,5 @@ def ask_tutor_endpoint(question_data: schemas.TutorQuestion):
     answer = ai_service.ask_tutor(question_data.question)
     return {"answer": answer}
 
-# Mount the frontend directory so we only need one server!
-import os as _os
-_frontend_path = "frontend" if _os.path.exists("frontend") else "../frontend"
-app.mount("/", StaticFiles(directory=_frontend_path, html=True), name="frontend")
+# Frontend is served separately via Vercel
+# Static file mounting not needed
