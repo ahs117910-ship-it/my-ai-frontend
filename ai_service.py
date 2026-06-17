@@ -91,7 +91,7 @@ def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     4. **Encouragement**: If they achieved everything or show a positive attitude, praise them enthusiastically!
     
     Format your response in HTML (using <strong>, <br>, <ul>, <li> etc.) so it looks good on a web dashboard. Do not use markdown syntax, just raw HTML strings.
-    Respond in a friendly, conversational tone in Korean.
+    Respond in a friendly, conversational tone in Korean. DO NOT use any Chinese characters (Hanja/Kanji). Use ONLY modern Korean Hangul.
     """
     
     try:
@@ -165,15 +165,16 @@ def ask_tutor(question: str) -> str:
         return "서버에 GROQ_API_KEY가 설정되지 않았습니다. Render 환경 변수를 확인해주세요."
     
     prompt = f"""
-    You are a friendly, encouraging AI Study Tutor.
-    The student is currently studying and has the following question:
-    "{question}"
+    You are a friendly, encouraging AI Study Tutor. 
+    The user is asking: "{question}"
+    
+    Answer clearly and concisely. If explaining a difficult concept, use an analogy.
+    Respond in Korean, but DO NOT use any Chinese characters (Hanja/Kanji). Use ONLY modern Korean Hangul.
     
     Please provide a clear, easy-to-understand answer. 
     Use a friendly and educational tone.
     Format your response in HTML (using <strong>, <br>, <ul>, <li>, <pre> for code if any) so it looks good on a web dashboard. 
     Do not use markdown syntax, just raw HTML strings.
-    Respond in the language the user asked the question in (usually Korean).
     """
     try:
         completion = client.chat.completions.create(
