@@ -73,8 +73,8 @@
                         </div>
                         <button type="button" id="add-goal-btn" class="btn btn-secondary" data-i18n="add-goal-btn" style="width: 100%; margin-bottom: 2rem;">+ Add New Subject</button>
                         
-                        <button type="submit" class="btn btn-primary generate-btn" data-i18n="generate-btn">
-                            ✨ Generate AI Schedule
+                        <button type="submit" id="generate-schedule-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                            <span class="btn-icon">✨</span> 시간표 자동 생성 (No AI)
                         </button>
                     </form>
                 </div>
@@ -196,6 +196,7 @@
                         <div class="tutor-sidebar">
                             <div class="tutor-sidebar-header">
                                 <button id="btn-new-chat" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-plus"></i> 새로운 대화</button>
+                                <button id="btn-clear-chats" class="btn btn-text" style="width: 100%; margin-top: 5px; color: var(--danger-color); font-size: 0.85rem;"><i class="fa-solid fa-trash"></i> 모든 대화 삭제</button>
                             </div>
                             <div class="tutor-history-list" id="tutor-history-list">
                                 <!-- History items will be injected here -->

@@ -11,55 +11,54 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 def generate_schedule(goals_data: list, total_hours: int):
     """
-    Calls Gemini API to generate a study schedule based on goals and available time.
+    Deterministically generates a study schedule based on goals and available time.
+    (No AI used to avoid API quota errors)
     """
-    model = genai.GenerativeModel('gemini-3.5-flash')
+    days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    schedule = []
     
-    prompt = f"""
-    You are an expert AI study scheduler.
-    The user has a total of {total_hours} hours available for study this week.
-    Here are their goals:
-    """
+    current_day_idx = 0
+    current_hour = 9 # Start at 09:00
     
-    for idx, goal in enumerate(goals_data):
-        prompt += f"\nGoal {idx+1}: Subject: {goal['subject']}, Description: {goal['description']}, Allocated Minutes: {goal['duration_minutes']}"
+    for goal in goals_data:
+        subject = goal.get("subject", "Study")
+        description = goal.get("description", "Study topic")
+        duration = int(goal.get("duration_minutes", 60))
         
-    prompt += """
-    
-    Please analyze the difficulty and scope of these goals.
-    Distribute the total available hours optimally across a typical 7-day week (Monday to Sunday).
-    Allocate time blocks in minutes (e.g., 60, 90, 120) considering focus spans (like Pomodoro).
-    
-    Return the schedule strictly in the following JSON format without any markdown wrappers or extra text:
-    [
-      {
-        "subject": "Name of the subject matching the goal",
-        "day_of_week": "Monday",
-        "start_time": "14:00",
-        "end_time": "16:00",
-        "duration_minutes": 120,
-        "topic": "Specific sub-topic to cover in this session"
-      },
-      ...
-    ]
-    
-    Make sure the total duration across all sessions approximately equals the total available hours.
-    """
-    
-    try:
-        response = model.generate_content(prompt)
-        text = response.text
-        # Clean up potential markdown formatting if the model still outputs it
-        if text.startswith("```json"):
-            text = text[7:-3].strip()
-        elif text.startswith("```"):
-            text = text[3:-3].strip()
+        # Break duration into chunks (max 120 minutes per block)
+        while duration > 0:
+            block_mins = min(duration, 120)
+            duration -= block_mins
             
-        schedule_json = json.loads(text)
-        return schedule_json
-    except Exception as e:
-        print(f"Error parsing Gemini response: {e}")
-        return []
+            end_hour = current_hour + (block_mins // 60)
+            end_min = block_mins % 60
+            
+            start_str = f"{current_hour:02d}:00"
+            end_str = f"{end_hour:02d}:{end_min:02d}"
+            
+            schedule.append({
+                "subject": subject,
+                "day_of_week": days[current_day_idx],
+                "start_time": start_str,
+                "end_time": end_str,
+                "duration_minutes": block_mins,
+                "topic": description
+            })
+            
+            current_hour = end_hour
+            if end_min > 0:
+                current_hour += 1 # round up next block start
+                
+            # If day is too long (e.g. past 8 PM), move to next day
+            if current_hour >= 20:
+                current_day_idx = (current_day_idx + 1) % 7
+                current_hour = 9
+                
+        # After each goal, switch to the next day for variety
+        current_day_idx = (current_day_idx + 1) % 7
+        current_hour = 9
+
+    return schedule
 
 def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     model = genai.GenerativeModel('gemini-3.5-flash')
