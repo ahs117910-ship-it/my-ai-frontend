@@ -369,14 +369,25 @@ if(reviewForm) {
         coachContent.innerHTML = '<em>AI 튜터가 리뷰를 분석하고 조언을 작성 중입니다... ⏳</em>';
         
         try {
-            const response = await fetch(`${API_BASE_URL}/review/coaching`, {
+            // Calculate an approximate achievement rate
+            const totalTasks = document.querySelectorAll('.review-task-checkbox').length;
+            const completedTasks = totalTasks - missed.length;
+            const rate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const todayDate = new Date().toISOString().split('T')[0];
+
+            const response = await fetch(`${API_BASE_URL}/reviews/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ notes: notes, missed_tasks: missed })
+                body: JSON.stringify({ 
+                    date: todayDate,
+                    achievement_rate: rate,
+                    notes: notes, 
+                    missed_tasks: missed 
+                })
             });
             if(!response.ok) throw new Error('Failed');
             const data = await response.json();
-            coachContent.innerHTML = data.feedback;
+            coachContent.innerHTML = data.coaching_feedback || "피드백을 생성하지 못했습니다.";
         } catch(err) {
             coachContent.innerHTML = '<span style="color:var(--danger-color);">피드백을 불러오는 데 실패했습니다. 다시 시도해주세요.</span>';
         }
