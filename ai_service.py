@@ -1,16 +1,21 @@
 import os
 import json
-from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# The user needs to set GROQ_API_KEY in their environment or .env file
-# The Groq client will automatically look for os.environ.get("GROQ_API_KEY")
+# Safely import groq - if not installed, features gracefully degrade
 try:
+    from groq import Groq
     groq_client = Groq()
+except ImportError:
+    Groq = None
+    groq_client = None
+    print("WARNING: groq package not installed. AI features will be unavailable.")
 except Exception:
     groq_client = None
+    print("WARNING: Failed to initialize Groq client. Check GROQ_API_KEY.")
+
 
 def generate_schedule(goals_data: list, total_hours: int):
     """
@@ -147,6 +152,9 @@ def ask_tutor(question: str) -> str:
     """
     # Force reload env to pick up any new keys without restarting the server
     load_dotenv(override=True)
+    
+    if Groq is None:
+        return "서버에 groq 패키지가 설치되지 않았습니다. requirements.txt를 확인해주세요."
     
     try:
         client = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
