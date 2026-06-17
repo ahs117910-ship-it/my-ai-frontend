@@ -93,7 +93,7 @@ def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     
     try:
         completion = groq_client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a helpful AI Study Coach."},
                 {"role": "user", "content": prompt}
@@ -128,7 +128,7 @@ def reschedule_missed(missed_sessions: list, upcoming_free_blocks: list):
     
     try:
         completion = groq_client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You output JSON arrays only."},
                 {"role": "user", "content": prompt}
@@ -174,7 +174,7 @@ def ask_tutor(question: str) -> str:
     """
     try:
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "You are a helpful AI tutor."},
                 {"role": "user", "content": prompt}
