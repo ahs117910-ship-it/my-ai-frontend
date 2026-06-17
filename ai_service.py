@@ -82,13 +82,16 @@ def generate_coaching_feedback(notes: str, missed_tasks: list) -> str:
     Goals they missed today: {missed_str}
     
     Please read the reflection notes carefully and follow these guidelines:
-    1. Deeply analyze the user's emotional and physical state from their notes. If they express struggles (e.g., "I'm tired", "I woke up late", "I lost focus"), provide warm empathy and highly practical, tailored advice for their specific situation (e.g., refreshing tips for fatigue, morning routines for waking up late). Be flexible and context-aware.
-    2. If the user asked any questions in their notes, you MUST answer them directly and helpfully.
-    3. Provide actionable tips on how to better distribute their time or manage their focus tomorrow, especially if they missed goals.
-    4. If they achieved everything or show a positive attitude, praise them enthusiastically and encourage them to keep up the good habits.
+    1. **Context & Emotion Analysis**: Deeply analyze the user's emotional and physical state from their notes. 
+    2. **Specific Solutions**: If they express struggles, you MUST provide highly practical, tailored advice.
+       - If they say "잠 온다", "졸리다" (sleepy), recommend specific ways to wake up (e.g., drinking cold water, stretching, short power nap, washing face).
+       - If they say "피곤하다" (tired), recommend rest strategies.
+       - If they lost focus, recommend focus techniques (like Pomodoro).
+    3. **Missed Goals**: Provide actionable tips on how to better distribute their time tomorrow, especially if they missed goals.
+    4. **Encouragement**: If they achieved everything or show a positive attitude, praise them enthusiastically!
     
-    Format your response in HTML (using <strong>, <br>, etc.) so it looks good on a web dashboard. Do not use markdown syntax, just raw HTML strings.
-    Respond in a friendly, conversational tone in Korean if the user's notes are in Korean, otherwise English.
+    Format your response in HTML (using <strong>, <br>, <ul>, <li> etc.) so it looks good on a web dashboard. Do not use markdown syntax, just raw HTML strings.
+    Respond in a friendly, conversational tone in Korean.
     """
     
     try:
